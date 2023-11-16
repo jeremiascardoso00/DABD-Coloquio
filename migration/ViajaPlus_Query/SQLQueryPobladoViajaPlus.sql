@@ -158,7 +158,47 @@ INSERT INTO Servicio_x_Transporte(ID_Servicio, ID_Transporte)
 VALUES (1, 1)
 
 
-
+--agrego los campos de gorm para el soft, delete, nada importante
+ALTER TABLE Administrador_Servicios
+ADD deleted_at DATETIME2;
+ALTER TABLE Administrador_x_Ciudad
+ADD deleted_at DATETIME2;
+ALTER TABLE Administrador_x_Itinerario
+ADD deleted_at DATETIME2;
+ALTER TABLE Administrador_x_Servicio
+ADD deleted_at DATETIME2;
+ALTER TABLE Administrador_x_Tramo
+ADD deleted_at DATETIME2;
+ALTER TABLE Administrador_x_Transporte
+ADD deleted_at DATETIME2;
+ALTER TABLE Asiento
+ADD deleted_at DATETIME2;
+ALTER TABLE Ciudad
+ADD deleted_at DATETIME2;
+ALTER TABLE Estado_Reserva
+ADD deleted_at DATETIME2;
+ALTER TABLE Itinerario
+ADD deleted_at DATETIME2;
+ALTER TABLE Itinerario_x_Tramo
+ADD deleted_at DATETIME2;
+ALTER TABLE Pasaje
+ADD deleted_at DATETIME2;
+ALTER TABLE Reserva
+ADD deleted_at DATETIME2;
+ALTER TABLE Reserva_x_Ciudad
+ADD deleted_at DATETIME2;
+ALTER TABLE Servicio
+ADD deleted_at DATETIME2;
+ALTER TABLE Servicio_x_Itinerario
+ADD deleted_at DATETIME2;
+ALTER TABLE Servicio_x_Transporte
+ADD deleted_at DATETIME2;
+ALTER TABLE Tramo
+ADD deleted_at DATETIME2;
+ALTER TABLE Tramo_x_Ciudad
+ADD deleted_at DATETIME2;
+ALTER TABLE Transporte
+ADD deleted_at DATETIME2;
 
 
 

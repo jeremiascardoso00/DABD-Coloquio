@@ -40,10 +40,12 @@ func main() {
 
 	// Crea una instancia de AdministradorController
 	ac := &controllers.AdministradorController{Txn: db}
+	tc := &controllers.TransporteController{Txn: db}
 
-	r.GET("/administradores", ac.GetAdministradores) // new
+	r.GET("/administradores", ac.GetAdministradores)
+	r.GET("/transportes", tc.GetTransportes)
 
-	r.Run()
+	r.Run(":3000")
 	// Rest of your code...
 
 }

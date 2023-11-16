@@ -36,6 +36,11 @@ type Transporte struct {
 	CostoTransporte float64
 }
 
+// TableName overrides the table name used by User to `profiles`
+func (Transporte) TableName() string {
+	return "Transporte"
+}
+
 type Asiento struct {
 	ID             int `gorm:"primaryKey"`
 	IDTransporte   int
