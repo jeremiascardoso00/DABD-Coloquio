@@ -1,74 +1,121 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
+	"time"
 
-	"github.com/gin-gonic/gin"
-	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 )
 
-type User struct {
+type AdministradorServicios struct {
 	gorm.Model
-	Name  string
-	Email string
+	DNI        int
+	Email      string
+	Contrasena string
+}
+
+type Servicio struct {
+	gorm.Model
+	Disponibilidad bool
+	FechaPartida   time.Time
+	FechaLlegada   time.Time
+	CostoServicio  float64
+}
+
+type CalidadServicio struct {
+	ID         int `gorm:"primaryKey"`
+	IDServicio int
+	Calidad    string
+	Servicio   Servicio `gorm:"foreignKey:IDServicio"`
+}
+
+type Transporte struct {
+	gorm.Model
+	NroUnidad       int
+	Pisos           int
+	Situacion       bool
+	CostoTransporte float64
+}
+
+type Asiento struct {
+	ID             int `gorm:"primaryKey"`
+	IDTransporte   int
+	Disponibilidad bool
+	Transporte     Transporte `gorm:"foreignKey:IDTransporte"`
+}
+
+type ServicioTransporte struct {
+	IDServicio   int        `gorm:"primaryKey"`
+	IDTransporte int        `gorm:"primaryKey"`
+	Servicio     Servicio   `gorm:"foreignKey:IDServicio"`
+	Transporte   Transporte `gorm:"foreignKey:IDTransporte"`
+}
+type Tramo struct {
+	gorm.Model
+	Distancia   int
+	HoraPartida time.Time
+	HoraLlegada time.Time
+	CostoTramo  float64
+}
+
+type Ciudad struct {
+	gorm.Model
+	Nombre string
+}
+
+type Reserva struct {
+	gorm.Model
+}
+
+type TramoCiudad struct {
+	IDTramo  int    `gorm:"primaryKey"`
+	IDCiudad int    `gorm:"primaryKey"`
+	Tramo    Tramo  `gorm:"foreignKey:IDTramo"`
+	Ciudad   Ciudad `gorm:"foreignKey:IDCiudad"`
+}
+
+type ReservaCiudad struct {
+	IDReserva int `gorm:"primaryKey"`
+	IDCiudad  int `gorm:"primaryKey"`
+	EsOrigen  bool
+	Reserva   Reserva `gorm:"foreignKey:IDReserva"`
+	Ciudad    Ciudad  `gorm:"foreignKey:IDCiudad"`
 }
 
 func main() {
 
 	// Set up the connection string
-	server := "localhost"
+	server := "sql-server-db"
 	port := 1433
 	user := "sa"
-	password := "super_password"
+	password := "Password1"
 	database := "master"
 	connectionString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s", server, user, password, port, database)
 
-	db, err := gorm.Open(sqlserver.Open(connectionString), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
+	var db *sql.DB
+	var err error
+
+	// Try to connect to the database every second until the connection is successful
+	for i := 0; i < 30; i++ {
+		db, err = sql.Open("mssql", connectionString)
+		if err == nil {
+			err = db.Ping()
+			if err == nil {
+				break
+			}
+		}
+		log.Println("Could not connect to database, waiting 1 second before retrying")
+		time.Sleep(time.Second)
 	}
 
-	// Migrate the schema
-	db.AutoMigrate(&User{})
+	if err != nil {
+		log.Fatalf("Could not connect to database: %v", err)
+	}
 
-	// Create a new Gin router
-	r := gin.Default()
+	log.Println("Connected to database")
 
-	// Define the routes
-	r.GET("/users", func(c *gin.Context) {
-		var users []User
-		db.Find(&users)
-		c.JSON(200, users)
-	})
+	// Rest of your code...
 
-	r.POST("/users", func(c *gin.Context) {
-		var user User
-		c.BindJSON(&user)
-		db.Create(&user)
-		c.JSON(200, user)
-	})
-
-	r.GET("/users/:id", func(c *gin.Context) {
-		var user User
-		db.First(&user, c.Param("id"))
-		c.JSON(200, user)
-	})
-
-	r.PUT("/users/:id", func(c *gin.Context) {
-		var user User
-		db.First(&user, c.Param("id"))
-		c.BindJSON(&user)
-		db.Save(&user)
-		c.JSON(200, user)
-	})
-
-	r.DELETE("/users/:id", func(c *gin.Context) {
-		var user User
-		db.Delete(&user, c.Param("id"))
-		c.JSON(200, gin.H{"message": "User deleted"})
-	})
-
-	// Run the server
-	r.Run(":8080")
 }

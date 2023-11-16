@@ -18,12 +18,12 @@ services:
       DB_USER: sa
       DB_PASSWORD: Password1
       DB_NAME: master
-  # dabdcoloquio:
-  #  image: dabdcoloquio
-  #  build:
-  #    context: .
-  #    dockerfile: Dockerfile
-  #  ports:
-  #    - 3000:3000
-  #  depends_on:
-  #    - sql-server-db
+  dabdcoloquio:
+   image: dabdcoloquio
+   build:
+     context: .
+     dockerfile: Dockerfile
+   ports:
+     - 3000:3000
+   depends_on:
+     - sql-server-db
