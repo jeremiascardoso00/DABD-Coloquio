@@ -15,7 +15,7 @@ type AdministradorController struct {
 func (ac *AdministradorController) GetAdministradores(c *gin.Context) {
 	var admServicios models.AdministradorServicios
 
-	query := ac.Txn.First(&admServicios)
+	query := ac.Txn.Find(&admServicios)
 	if query.Error != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
 		return
