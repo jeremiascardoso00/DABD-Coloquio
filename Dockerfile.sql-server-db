@@ -5,5 +5,29 @@ ENV SA_PASSWORD=Password1
 ENV MSSQL_PID=Developer
 ENV MSSQL_TCP_PORT=1433
 WORKDIR /src
-COPY ./migration/ViajaPlus_Query/SQLQueryCreationViajaPlustables.sql ./SQLQueryCreationViajaPlustables.sql
-RUN (/opt/mssql/bin/sqlservr --accept-eula & ) | grep -q "Service Broker manager has started" && sleep 30 && /opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P Password1 -i SQLQueryCreationViajaPlustables.sql
+#COPY ./migration/ViajaPlus_Query/SQLQueryCreationViajaPlustables.sql ./SQLQueryCreationViajaPlustables.sql
+#RUN (/opt/mssql/bin/sqlservr --accept-eula & ) | grep -q "Service Broker manager has started" && sleep 30 && /opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P Password1 -i SQLQueryCreationViajaPlustables.sql
+
+# Copia tus archivos .sql al contenedor
+COPY ./migration/ViajaPlus_Query ./ 
+
+# Ejecuta los archivos .sql en la base de datos
+# RUN (/opt/mssql/bin/sqlservr --accept-eula & ) | grep -q "Service Broker manager has started" && \
+#     sleep 30 && \
+#     /opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P Password1 -i SQLQueryCreationViajaPlustables.sql && \
+#     /opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P Password1 -i SQLQueryPobladoViajaPlus.sql
+
+
+
+# Ejecuta los archivos .sql en la base de datos
+RUN (/opt/mssql/bin/sqlservr --accept-eula & ) | grep -q "Service Broker manager has started" && \
+    sleep 30 && \
+    /opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P Password1 -Q "CREATE DATABASE ViajaPlus" && \
+    /opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P Password1 -d ViajaPlus -i SQLQueryCreationViajaPlustables.sql && \
+    /opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P Password1 -d ViajaPlus -i SQLQueryPobladoViajaPlus.sql
+
+
+
+
+
+
