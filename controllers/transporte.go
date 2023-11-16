@@ -15,7 +15,7 @@ type TransporteController struct {
 func (tc *TransporteController) GetTransportes(c *gin.Context) {
 	var transporte models.Transporte
 
-	query := tc.Txn.First(&transporte)
+	query := tc.Txn.Find(&transporte)
 	if query.Error != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
 		return
