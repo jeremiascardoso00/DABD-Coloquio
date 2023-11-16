@@ -23,32 +23,34 @@ Fecha_Llegada DATETIME2 NOT NULL,
 Costo_Servicio MONEY NOT NULL
 );
 -----------------------------------------
-USE ViajaPlus
-
-DROP TABLE IF EXISTS Calidad_Servicio
-
-CREATE TABLE Calidad_Servicio
-(
-ID INT IDENTITY(1,1) NOT NULL,
-ID_Servicio INT NOT NULL,
-PRIMARY KEY(ID, ID_Servicio),
-
-Calidad VARCHAR NOT NULL,
-
-FOREIGN KEY (ID_Servicio) REFERENCES dbo.Servicio(ID)
-);
+--USE ViajaPlus
+--
+--DROP TABLE IF EXISTS Calidad_Servicio
+--
+--CREATE TABLE Calidad_Servicio
+--(
+--ID INT IDENTITY(1,1) NOT NULL,
+--ID_Servicio INT NOT NULL,
+--PRIMARY KEY(ID, ID_Servicio),
+--
+--Calidad VARCHAR NOT NULL,
+--
+--FOREIGN KEY (ID_Servicio) REFERENCES dbo.Servicio(ID)
+--);
 -------------------------------------------------------------------------------------------------------
 USE ViajaPlus
 
 DROP TABLE IF EXISTS Transporte
 
-CREATE TABLE Transporte
-(
-ID INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
-Nro_Unidad INT NOT NULL,
-Pisos INT NOT NULL,
-Situacion BIT NOT NULL,
-Costo_Transporte MONEY NOT NULL
+CREATE TABLE ViajaPlus.dbo.Transporte (
+	ID int IDENTITY(1,1) NOT NULL,
+	Nro_Unidad int NOT NULL,
+	Pisos int NOT NULL,
+	Situacion bit NOT NULL,
+	Costo_Transporte money NOT NULL,
+	Categoria varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	Tipo_Atencion varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	CONSTRAINT PK__Transpor__3214EC27D05AFFB0 PRIMARY KEY (ID)
 );
 
 USE ViajaPlus
@@ -66,35 +68,35 @@ Disponibilidad BIT NOT NULL,
 FOREIGN KEY (ID_Transporte) REFERENCES dbo.Transporte(ID)
 );
 ---------------------------------------
-USE ViajaPlus
-
-DROP TABLE IF EXISTS Categoria_Transporte
-
-CREATE TABLE Categoria_Transporte
-(
-ID INT IDENTITY(1,1) NOT NULL,
-ID_transporte INT NOT NULL,
-PRIMARY KEY(ID, ID_Transporte),
-
-Categoria VARCHAR NOT NULL,
-
-FOREIGN KEY (ID_Transporte) REFERENCES dbo.Transporte(ID)
-);
+--USE ViajaPlus
+--
+--DROP TABLE IF EXISTS Categoria_Transporte
+--
+--CREATE TABLE Categoria_Transporte
+--(
+--ID INT IDENTITY(1,1) NOT NULL,
+--ID_transporte INT NOT NULL,
+--PRIMARY KEY(ID, ID_Transporte),
+--
+--Categoria VARCHAR NOT NULL,
+--
+--FOREIGN KEY (ID_Transporte) REFERENCES dbo.Transporte(ID)
+--);
 ---------------------------------------
-USE ViajaPlus
-
-DROP TABLE IF EXISTS Tipo_Atencion_Transporte
-
-CREATE TABLE Tipo_Atencion_Transporte
-(
-ID INT IDENTITY(1,1) NOT NULL,
-ID_transporte INT NOT NULL,
-PRIMARY KEY(ID, ID_Transporte),
-
-Tipo VARCHAR NOT NULL,
-
-FOREIGN KEY (ID_Transporte) REFERENCES dbo.Transporte(ID)
-);
+--USE ViajaPlus
+--
+--DROP TABLE IF EXISTS Tipo_Atencion_Transporte
+--
+--CREATE TABLE Tipo_Atencion_Transporte
+--(
+--ID INT IDENTITY(1,1) NOT NULL,
+--ID_transporte INT NOT NULL,
+--PRIMARY KEY(ID, ID_Transporte),
+--
+--Tipo VARCHAR NOT NULL,
+--
+--FOREIGN KEY (ID_Transporte) REFERENCES dbo.Transporte(ID)
+--);
 -------------------------------------------------------------------------------------------------------
 USE ViajaPlus
 
@@ -312,3 +314,43 @@ PRIMARY KEY(ID_Administrador, ID_Ciudad),
 FOREIGN KEY (ID_Administrador) REFERENCES dbo.Administrador_Servicios(ID),
 FOREIGN KEY (ID_Ciudad) REFERENCES dbo.Ciudad(ID)
 );
+
+
+ALTER TABLE Servicio
+ALTER COLUMN Calidad_Servicio VARCHAR(20) NOT NULL;
+
+UPDATE Servicio
+SET Calidad_Servicio = ISNULL(Calidad_Servicio, 'Premium')
+WHERE Calidad_Servicio IS NULL;
+
+ALTER TABLE Reserva
+ADD Estado VARCHAR(20) NOT NULL
+
+ALTER TABLE Reserva
+ADD Nombre_Cliente VARCHAR(20), 
+	Apellido_Cliente VARCHAR(20),
+	DNI_Cliente INT
+
+UPDATE Reserva
+SET Nombre_Cliente = 'Fernando',
+	Apellido_Cliente = 'Zalazar',
+	DNI_Cliente = 22222222
+WHERE ID = 2;
+
+SELECT *
+FROM Reserva
+
+ALTER TABLE Reserva
+ADD CONSTRAINT DF_ValorPorDefecto DEFAULT 'Espera' FOR Estado;--estados posibles Espera, Pagado, Cancelado
+
+INSERT INTO Reserva
+DEFAULT VALUES
+
+--Es_Origen bit = 0 Es Origen, bit = 1 Llegada
+INSERT INTO Reserva_x_Ciudad(ID_Reserva, ID_Ciudad, Es_Origen)
+VALUES (1, 1, 0),
+		(1, 2, 1)
+
+INSERT INTO Pasaje(ID_Servicio,Costo)
+VALUES (1, '$19500')
+
