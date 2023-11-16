@@ -151,6 +151,9 @@ DROP TABLE IF EXISTS Reserva
 CREATE TABLE Reserva
 (
 ID INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+Nombre VARCHAR(50) NOT NULL,
+Apellido VARCHAR(50) NOT NULL,
+DNI INT NOT NULL,
 );
 -----------------------------------------
 USE ViajaPlus
