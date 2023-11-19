@@ -98,6 +98,7 @@ FOREIGN KEY (ID_Transporte) REFERENCES dbo.Transporte(ID)
 --FOREIGN KEY (ID_Transporte) REFERENCES dbo.Transporte(ID)
 --);
 -------------------------------------------------------------------------------------------------------
+
 USE ViajaPlus
 
 DROP TABLE IF EXISTS Tramo
@@ -106,8 +107,8 @@ CREATE TABLE Tramo
 (
 ID INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
 Distancia INT NOT NULL,
-Hora_Partida TIME NOT NULL,
-Hora_Llegada TIME NOT NULL,
+Fecha_Partida DATETIME2 NOT NULL,
+Fecha_Llegada DATETIME2 NOT NULL,
 Costo_Tramo MONEY NOT NULL
 );
 

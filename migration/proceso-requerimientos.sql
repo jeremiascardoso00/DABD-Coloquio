@@ -33,9 +33,25 @@ where '2024-01-01 12:00:00.000' BETWEEN s.Fecha_Partida AND s.Fecha_Llegada
 
 --necesitamos cambiar el tipo de dato de los tramos y poner fecha en vez de horario
 
+ALTER TABLE Tramo
+ADD Fecha_Partida DATETIME2 NOT NULL
+CONSTRAINT DF_Fecha_Partida DEFAULT GETDATE(),
+Fecha_Llegada DATETIME2 NOT NULL
+CONSTRAINT DF_Fecha_Llegada DEFAULT GETDATE()
 
+UPDATE Tramo
+SET Fecha_Partida = CAST(Hora_Partida AS DATETIME2),
+Fecha_Llegada = CAST(Hora_Llegada AS DATETIME2)
 
+ALTER TABLE Tramo
+DROP COLUMN Hora_Partida
 
+ALTER TABLE Tramo
+DROP COLUMN Hora_Llegada
+
+UPDATE Tramo
+SET Fecha_Partida = DATEADD(HOUR, DATEPART(HOUR, Fecha_Partida), DATEADD(MINUTE, DATEPART(MINUTE, Fecha_Partida), DATEADD(SECOND, DATEPART(SECOND, Fecha_Partida), CAST('2024-01-01' AS DATETIME2)))),
+Fecha_Llegada = DATEADD(HOUR, DATEPART(HOUR, Fecha_Llegada), DATEADD(MINUTE, DATEPART(MINUTE, Fecha_Llegada), DATEADD(SECOND, DATEPART(SECOND, Fecha_Llegada), CAST('2024-01-01' AS DATETIME2))))
 
 -------------------------------------------------------------------------------------------------------------
 

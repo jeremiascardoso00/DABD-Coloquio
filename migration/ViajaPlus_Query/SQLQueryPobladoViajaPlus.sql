@@ -36,12 +36,12 @@ VALUES (1, 1),
 
 -- Se asumen todas las distancias en Km y los tiempos en formato de 24 horas
 -- El precio por km es de 100 pesos
-INSERT INTO Tramo(Distancia, Hora_Partida, Hora_Llegada, Costo_Tramo)
-VALUES (137, '12:00:00', '13:45:00', 1985),--Resistencia a Villa Ocampo
-		(86, '14:00:00', '15:00:00', 1246),--Villa Ocampo a Reconquista
-		(325, '15:15:00', '19:00:00', 4708),--Reconquista a Santa fe
-		(360, '19:15:00', '23:15:00', 5215),--Santa fe a Rosario
-		(300, '23:30:00', '02:15:00', 4346)--Rosario a Buenos Aires
+INSERT INTO Tramo(Distancia, Fecha_Partida, Fecha_Llegada, Costo_Tramo)
+VALUES (137, '2024-01-01T12:00:00', '2024-01-01T13:45:00', 1985),--Resistencia a Villa Ocampo
+		(86, '2024-01-01T14:00:00', '2024-01-01T15:00:00', 1246),--Villa Ocampo a Reconquista
+		(325, '2024-01-01T15:15:00', '2024-01-01T19:00:00', 4708),--Reconquista a Santa fe
+		(360, '2024-01-01T19:15:00', '2024-01-01T23:15:00', 5215),--Santa fe a Rosario
+		(300, '2024-01-01T23:30:00', '2024-01-02T02:15:00', 4346)--Rosario a Buenos Aires
 
 UPDATE Tramo
 SET Costo_Tramo = 
