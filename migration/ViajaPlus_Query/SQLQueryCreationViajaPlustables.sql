@@ -126,6 +126,16 @@ Distancia INT NOT NULL,
 
 USE ViajaPlus
 
+DROP TABLE IF EXISTS Ciudad
+
+CREATE TABLE Ciudad
+(
+ID INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+Nombre VARCHAR(30) NOT NULL,
+);
+
+USE ViajaPlus
+
 DROP TABLE IF EXISTS Itinerario_x_Ciudad
 
 CREATE TABLE Itinerario_x_Ciudad
@@ -140,15 +150,7 @@ FOREIGN KEY (ID_Itinerario) REFERENCES dbo.Itinerario(ID),
 FOREIGN KEY (ID_Ciudad) REFERENCES dbo.Ciudad(ID)
 );
 
-USE ViajaPlus
 
-DROP TABLE IF EXISTS Ciudad
-
-CREATE TABLE Ciudad
-(
-ID INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
-Nombre VARCHAR(30) NOT NULL,
-);
 -------------------------------------------------------------------------------------------------------
 USE ViajaPlus
 

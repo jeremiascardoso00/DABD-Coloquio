@@ -69,7 +69,7 @@ VALUES (1, 1, 1),
 		(5, 5, 1),
 		(5, 2, 0)--Rosario a Buenos Aires
 
-INSERT INTO Itinerario (Distancia, Ciudad_Partida, Ciudad_Llegada)
+INSERT INTO Itinerario (Distancia)
 VALUES (1208)
 
 INSERT INTO Itinerario_x_Ciudad(ID_Itinerario, ID_Ciudad, Es_Origen)
