@@ -49,6 +49,8 @@ func main() {
 	r.GET("/transportes", tc.GetTransportes)
 
 	//ciudad
+
+	//get ciudades por nombre
 	r.GET("/ciudad/:name", cc.GetCiudades)
 
 	r.Run(":3000")
