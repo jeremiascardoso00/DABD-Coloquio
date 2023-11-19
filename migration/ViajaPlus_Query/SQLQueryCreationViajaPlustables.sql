@@ -120,8 +120,24 @@ CREATE TABLE Itinerario
 (
 ID INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
 Distancia INT NOT NULL,
-Ciudad_Partida VARCHAR(50) NOT NULL,
-Ciudad_Llegada VARCHAR(50) NOT NULL,
+--Ciudad_Partida VARCHAR(50) NOT NULL,
+--Ciudad_Llegada VARCHAR(50) NOT NULL,
+);
+
+USE ViajaPlus
+
+DROP TABLE IF EXISTS Itinerario_x_Ciudad
+
+CREATE TABLE Itinerario_x_Ciudad
+(
+ID_Itinerario INT NOT NULL,
+ID_Ciudad INT NOT NULL,
+Es_Origen BIT NOT NULL,
+
+PRIMARY KEY(ID_Itinerario, ID_Ciudad),
+
+FOREIGN KEY (ID_Itinerario) REFERENCES dbo.Itinerario(ID),
+FOREIGN KEY (ID_Ciudad) REFERENCES dbo.Ciudad(ID)
 );
 
 USE ViajaPlus
@@ -224,6 +240,7 @@ CREATE TABLE Tramo_x_Ciudad
 (
 ID_Tramo INT NOT NULL,
 ID_Ciudad INT NOT NULL,
+Es_Origen BIT NOT NULL,
 PRIMARY KEY(ID_Tramo, ID_Ciudad),
 
 FOREIGN KEY (ID_Tramo) REFERENCES dbo.Tramo(ID),
@@ -355,3 +372,4 @@ VALUES (1, 1, 0),
 INSERT INTO Pasaje(ID_Servicio,Costo)
 VALUES (1, '$19500')
 
+ALTER TABLE ViajaPlus.dbo.Asiento ADD  DEFAULT 0 FOR Disponibilidad;
