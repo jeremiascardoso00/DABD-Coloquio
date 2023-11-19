@@ -82,6 +82,10 @@ type Ciudad struct {
 	Nombre string
 }
 
+func (Ciudad) TableName() string {
+	return "Ciudad"
+}
+
 type Pasaje struct {
 	gorm.Model
 	IDServicio int
