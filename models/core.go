@@ -21,6 +21,11 @@ type Servicio struct {
 	CostoServicio  float64
 }
 
+// TableName overrides the table name used by User to `profiles`
+func (Servicio) TableName() string {
+	return "ViajaPlus.dbo.Servicio"
+}
+
 type CalidadServicio struct {
 	ID         int `gorm:"primaryKey"`
 	IDServicio int
@@ -38,7 +43,7 @@ type Transporte struct {
 
 // TableName overrides the table name used by User to `profiles`
 func (Transporte) TableName() string {
-	return "Transporte"
+	return "ViajaPlus.dbo.Transporte"
 }
 
 type Asiento struct {
@@ -83,7 +88,7 @@ type Ciudad struct {
 }
 
 func (Ciudad) TableName() string {
-	return "Ciudad"
+	return "ViajaPlus.dbo.Ciudad"
 }
 
 type Pasaje struct {

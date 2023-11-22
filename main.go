@@ -44,6 +44,7 @@ func main() {
 	ac := &controllers.AdministradorController{Txn: db}
 	tc := &controllers.TransporteController{Txn: db}
 	cc := &controllers.CiudadController{Txn: db}
+	vc := &controllers.ViajeController{Txn: db}
 
 	r.GET("/administradores", ac.GetAdministradores)
 	r.GET("/transportes", tc.GetTransportes)
@@ -52,6 +53,9 @@ func main() {
 
 	//get ciudades por nombre
 	r.GET("/ciudad/:name", cc.GetCiudades)
+
+	//viaje
+	r.GET("/viaje/opciones", vc.GetItinerariosYTramos)
 
 	r.Run(":3000")
 	// Rest of your code...

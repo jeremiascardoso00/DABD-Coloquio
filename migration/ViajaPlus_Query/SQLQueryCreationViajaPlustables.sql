@@ -375,3 +375,45 @@ INSERT INTO Pasaje(ID_Servicio,Costo)
 VALUES (1, '$19500')
 
 ALTER TABLE ViajaPlus.dbo.Asiento ADD  DEFAULT 0 FOR Disponibilidad;
+
+
+INSERT INTO ViajaPlus.dbo.Ciudad
+(Nombre, deleted_at)
+VALUES( 'Posadas', NULL);
+
+--insert to test query
+INSERT INTO ViajaPlus.dbo.Tramo
+(Distancia, Fecha_Partida, Fecha_Llegada, Costo_Tramo, deleted_at)
+VALUES(40, '2024-01-01 12:00:00.000', '2024-01-01 13:45:00.000', 1000.0000, NULL);
+
+-- agrego un nuevo tramo de resistencia a corrientes
+INSERT INTO ViajaPlus.dbo.Tramo_x_Ciudad
+(ID_Tramo, ID_Ciudad, Es_Origen, deleted_at)
+VALUES(6, 1, 1, NULL);
+INSERT INTO ViajaPlus.dbo.Tramo_x_Ciudad
+(ID_Tramo, ID_Ciudad, Es_Origen, deleted_at)
+VALUES(6, 10, 0, NULL);
+
+INSERT INTO ViajaPlus.dbo.Tramo
+( Distancia, Fecha_Partida, Fecha_Llegada, Costo_Tramo, deleted_at)
+VALUES( 301, '2024-01-01 12:00:00.000', '2024-01-01 13:45:00.000', 1000.0000, NULL);
+
+INSERT INTO ViajaPlus.dbo.Tramo_x_Ciudad
+(ID_Tramo, ID_Ciudad, Es_Origen, deleted_at)
+VALUES(7, 10, 1, NULL);
+INSERT INTO ViajaPlus.dbo.Tramo_x_Ciudad
+(ID_Tramo, ID_Ciudad, Es_Origen, deleted_at)
+VALUES(7, 14, 0, NULL);
+
+
+--insert nuevo itinerario con 2 tramos
+--resistencia - corrientes - corrientes - posadas
+INSERT INTO ViajaPlus.dbo.Itinerario
+(Distancia, deleted_at)
+VALUES(341, NULL);
+INSERT INTO ViajaPlus.dbo.Itinerario_x_Ciudad
+(ID_Itinerario, ID_Ciudad, Es_Origen)
+VALUES(2, 1, 1);
+INSERT INTO ViajaPlus.dbo.Itinerario_x_Ciudad
+(ID_Itinerario, ID_Ciudad, Es_Origen)
+VALUES(2, 14, 0);

@@ -302,6 +302,10 @@ inner join Servicio s ON s.ID = sxi.ID_Servicio
 inner join Itinerario_x_Ciudad ixc ON ixc.ID_Itinerario  = i.ID and ixc.Es_origen = 1
 where c.ID = 1 and s.Disponibilidad = 1
 
+--contemplar ciudad de destino 
+
+
+
 -------------------------------------------------------------------------------------------------------------
 
 --2. Venta de Pasajes: Facilita la compra de pasajes para itinerarios o tramos en función de la disponibilidad.
