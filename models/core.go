@@ -75,6 +75,10 @@ type Tramo struct {
 	CostoTramo  float64
 }
 
+func (Tramo) TableName() string {
+	return "ViajaPlus.dbo.Tramo"
+}
+
 type Itinerario struct {
 	gorm.Model
 	Distancia     int
