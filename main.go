@@ -4,7 +4,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/gin-gonic/gin" // Asegúrate de que esta ruta de importación es correcta
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	"github.com/jeremiascardoso00/DABD-COLOQUIO/controllers"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
@@ -39,6 +40,9 @@ func main() {
 	log.Println("Connected to database")
 
 	r := gin.Default()
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	r.Use(cors.New(config))
 
 	// Crea una instancia de AdministradorController
 	ac := &controllers.AdministradorController{Txn: db}
