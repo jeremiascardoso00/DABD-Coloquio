@@ -69,10 +69,10 @@ type TipoAtencionTransporte struct {
 
 type Tramo struct {
 	gorm.Model
-	Distancia   int
-	HoraPartida time.Time
-	HoraLlegada time.Time
-	CostoTramo  float64
+	Distancia    int
+	FechaPartida time.Time
+	FechaLlegada time.Time
+	CostoTramo   float64
 }
 
 func (Tramo) TableName() string {

@@ -285,6 +285,50 @@ SELECT * FROM "Ciudad" WHERE Nombre  LIKE '%re%' AND "Ciudad"."deleted_at" IS NU
 --SET Disponibilidad=1
 --WHERE ID=45 AND ID_Transporte=1;
 
+------------------------------------
+
+--
+--INSERT INTO ViajaPlus.dbo.Ciudad
+--(Nombre, deleted_at)
+--VALUES( 'Posadas', NULL);
+--
+--insert to test query
+--INSERT INTO ViajaPlus.dbo.Tramo
+--(Distancia, Fecha_Partida, Fecha_Llegada, Costo_Tramo, deleted_at)
+--VALUES(40, '2024-01-01 12:00:00.000', '2024-01-01 13:45:00.000', 1000.0000, NULL);
+--
+-- agrego un nuevo tramo de resistencia a corrientes
+--INSERT INTO ViajaPlus.dbo.Tramo_x_Ciudad
+--(ID_Tramo, ID_Ciudad, Es_Origen, deleted_at)
+--VALUES(6, 1, 1, NULL);
+--INSERT INTO ViajaPlus.dbo.Tramo_x_Ciudad
+--(ID_Tramo, ID_Ciudad, Es_Origen, deleted_at)
+--VALUES(6, 10, 0, NULL);
+--
+--INSERT INTO ViajaPlus.dbo.Tramo
+--( Distancia, Fecha_Partida, Fecha_Llegada, Costo_Tramo, deleted_at)
+--VALUES( 301, '2024-01-01 12:00:00.000', '2024-01-01 13:45:00.000', 1000.0000, NULL);
+--
+--INSERT INTO ViajaPlus.dbo.Tramo_x_Ciudad
+--(ID_Tramo, ID_Ciudad, Es_Origen, deleted_at)
+--VALUES(7, 10, 1, NULL);
+--INSERT INTO ViajaPlus.dbo.Tramo_x_Ciudad
+--(ID_Tramo, ID_Ciudad, Es_Origen, deleted_at)
+--VALUES(7, 14, 0, NULL);
+--
+--
+--insert nuevo itinerario con 2 tramos
+--resistencia - corrientes - corrientes - posadas
+--INSERT INTO ViajaPlus.dbo.Itinerario
+--(Distancia, deleted_at)
+--VALUES(341, NULL);
+--INSERT INTO ViajaPlus.dbo.Itinerario_x_Ciudad
+--(ID_Itinerario, ID_Ciudad, Es_Origen)
+--VALUES(2, 1, 1);
+--INSERT INTO ViajaPlus.dbo.Itinerario_x_Ciudad
+--(ID_Itinerario, ID_Ciudad, Es_Origen)
+--VALUES(2, 14, 0);
+
 --query para obtener las opciones disponibles segun las entradas
 --Resistencia - id: 1
 --Buenos Aires - id: 2
@@ -292,19 +336,40 @@ SELECT * FROM "Ciudad" WHERE Nombre  LIKE '%re%' AND "Ciudad"."deleted_at" IS NU
 --(es posible que la entrada solo sea dia, 
 --el horario lo elegira el cliente desde las opciones de la query de abajo)
 
-SELECT s.* FROM Ciudad c
-right join Tramo_x_Ciudad txc ON txc.ID_Ciudad = c.ID and txc.Es_origen = 1
-inner join Tramo t ON t.ID  = txc.ID_Tramo 
-inner join Itinerario_x_Tramo ixt ON ixt.ID_Tramo = t.ID 
-inner join Itinerario i ON i.ID = ixt.ID_Itinerario 
-inner join Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = i.ID 
-inner join Servicio s ON s.ID = sxi.ID_Servicio 
-inner join Itinerario_x_Ciudad ixc ON ixc.ID_Itinerario  = i.ID and ixc.Es_origen = 1
-where c.ID = 1 and s.Disponibilidad = 1
+--con este select se puede traer los itinerarios que coincidan con la busqueda de ciudades
+-- origen y destino
+SELECT x.* FROM ViajaPlus.dbo.Itinerario x
 
---contemplar ciudad de destino 
+--trae itinerarios
+SELECT s.* 
+FROM ViajaPlus.dbo.Itinerario i 
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Ciudad ixc_origen ON ixc_origen.ID_Itinerario = i.ID 
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Ciudad ixc_destino ON ixc_destino.ID_Itinerario = i.ID 
+inner join ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = i.ID 
+right join ViajaPlus.dbo.Servicio s ON s.ID = sxi.ID_Servicio 
+WHERE ixc_origen.ID_Ciudad = 1 AND ixc_origen.Es_Origen = 1
+AND ixc_destino.ID_Ciudad = 2 AND ixc_destino.Es_Origen = 0
+AND s.Disponibilidad = 1
+AND CONVERT(date, s.Fecha_Partida) = '2024-01-01'
 
+------------------------------------------
+--trae tramos
+SELECT t.* 
+FROM ViajaPlus.dbo.Tramo t
+INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_origen ON txc_origen.ID_Tramo  = t.ID 
+INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_destino ON txc_destino.ID_Tramo = t.ID 
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Tramo = t.ID 
+INNER JOIN ViajaPlus.dbo.Itinerario i ON i.ID  = ixt.ID_Itinerario 
+INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = i.ID 
+RIGHT JOIN ViajaPlus.dbo.Servicio s ON s.ID = sxi.ID_Servicio 
+WHERE txc_origen.ID_Ciudad = 1 AND txc_origen.Es_Origen = 1
+AND txc_destino.ID_Ciudad = 7 AND txc_destino.Es_Origen = 0
+AND CONVERT(date, t.Fecha_Partida) = '2024-01-01'
+AND s.Disponibilidad = 1
 
+--todo para el endpoint de opciones, tengo que devolver tambien la calidad
+-- en el de tramos y en el de itinerario
+-- agregar tambien origen y destino
 
 -------------------------------------------------------------------------------------------------------------
 
