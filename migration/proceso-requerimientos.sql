@@ -361,7 +361,7 @@ INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_destino ON txc_destino.ID_Tramo = t.
 INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Tramo = t.ID 
 INNER JOIN ViajaPlus.dbo.Itinerario i ON i.ID  = ixt.ID_Itinerario 
 INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = i.ID 
-RIGHT JOIN ViajaPlus.dbo.Servicio s ON s.ID = sxi.ID_Servicio 
+INNER JOIN ViajaPlus.dbo.Servicio s ON s.ID = sxi.ID_Servicio 
 WHERE txc_origen.ID_Ciudad = 1 AND txc_origen.Es_Origen = 1
 AND txc_destino.ID_Ciudad = 7 AND txc_destino.Es_Origen = 0
 AND CONVERT(date, t.Fecha_Partida) = '2024-01-01'
@@ -369,8 +369,64 @@ AND s.Disponibilidad = 1
 
 --todo para el endpoint de opciones, tengo que devolver tambien la calidad
 -- en el de tramos y en el de itinerario
--- agregar tambien origen y destino
+-- agregar tambien origen y destino en tramo
 
+
+--------------------------------------------------
+
+SELECT 
+	Itinerario.ID, 
+	Servicio.Disponibilidad, 
+	c_origen.Nombre as Origen,
+	c_destino.Nombre as Destino,
+	Servicio.Fecha_Partida, 
+	Servicio.Fecha_Llegada,
+	Servicio.Costo_Servicio + t.Costo_Transporte as Costo,
+	Itinerario.Distancia,
+	t.Categoria as CategoriaTransporte,
+	t.Tipo_Atencion as TipoAtencion,
+	t.Pisos
+FROM "ViajaPlus"."dbo"."Itinerario" 
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Ciudad ixc_origen ON ixc_origen.ID_Itinerario = Itinerario.ID 
+INNER JOIN ViajaPlus.dbo.Ciudad c_origen ON c_origen.ID  = ixc_origen.ID_Ciudad 
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Ciudad ixc_destino ON ixc_destino.ID_Itinerario = Itinerario.ID 
+INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID  = ixc_destino.ID_Ciudad 
+INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = Itinerario.ID 
+INNER JOIN ViajaPlus.dbo.Servicio ON Servicio.ID = sxi.ID_Servicio 
+INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio  = Servicio.ID
+INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = sxt.ID_Transporte 
+WHERE (ixc_origen.ID_Ciudad = '1' AND ixc_origen.Es_Origen = 1) 
+AND (ixc_destino.ID_Ciudad = '2' AND ixc_destino.Es_Origen = 0) 
+AND Servicio.Disponibilidad = 1 
+AND CONVERT(date, Servicio.Fecha_Partida) = '2024-01-01' 
+AND "ViajaPlus"."dbo"."Itinerario"."deleted_at" IS NULL
+
+------------------------------------------
+SELECT Tramo.ID, 
+	c_origen.Nombre as Origen,
+	c_destino.Nombre as Destino,
+	Tramo.Fecha_Partida, 
+	Tramo.Fecha_Llegada,
+	Tramo.Costo_Tramo + t.Costo_Transporte as Costo,
+	Tramo.Distancia ,
+	t.Categoria as CategoriaTransporte,
+	t.Tipo_Atencion as TipoAtencion,
+	t.Pisos
+FROM "ViajaPlus"."dbo"."Tramo" 
+INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_origen ON txc_origen.ID_Tramo = Tramo.ID 
+INNER JOIN ViajaPlus.dbo.Ciudad c_origen ON c_origen.ID = txc_origen.ID_Ciudad 
+INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_destino ON txc_destino.ID_Tramo = Tramo.ID 
+INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = txc_destino.ID_Ciudad 
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Tramo = Tramo.ID 
+INNER JOIN ViajaPlus.dbo.Itinerario i ON i.ID  = ixt.ID_Itinerario 
+INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = i.ID 
+INNER JOIN ViajaPlus.dbo.Servicio ON Servicio.ID = sxi.ID_Servicio 
+INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio = Servicio.ID
+INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = sxt.ID_Transporte 
+WHERE (txc_origen.ID_Ciudad = '1' AND txc_origen.Es_Origen = 1) 
+AND (txc_destino.ID_Ciudad = '7' AND txc_destino.Es_Origen = 0) 
+AND Servicio.Disponibilidad = 1 
+AND CONVERT(date, Tramo.Fecha_Partida) = '2024-01-01'
 -------------------------------------------------------------------------------------------------------------
 
 --2. Venta de Pasajes: Facilita la compra de pasajes para itinerarios o tramos en función de la disponibilidad.
