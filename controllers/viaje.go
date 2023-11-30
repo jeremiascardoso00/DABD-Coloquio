@@ -60,7 +60,7 @@ func (vc *ViajeController) GetItinerariosYTramos(c *gin.Context) {
 
 	query := vc.Txn.
 		Table("ViajaPlus.dbo.Itinerario").
-		Select(`Itinerario.ID, 
+		Select(`Servicio.ID, 
 				c_origen.Nombre as Origen,
 				c_destino.Nombre as Destino,
 				Servicio.Fecha_Partida, 
@@ -91,7 +91,7 @@ func (vc *ViajeController) GetItinerariosYTramos(c *gin.Context) {
 
 	query = vc.Txn.
 		Table("ViajaPlus.dbo.Tramo").
-		Select(`Tramo.ID, 
+		Select(`Servicio.ID, 
 				c_origen.Nombre as Origen,
 				c_destino.Nombre as Destino,
 				Tramo.Fecha_Partida, 
@@ -122,7 +122,8 @@ func (vc *ViajeController) GetItinerariosYTramos(c *gin.Context) {
 		return
 	}
 
+	opciones := append(opcionesI, opcionesT...)
+
 	c.JSON(http.StatusOK, gin.H{
-		"itinerarios": opcionesI,
-		"tramos":      opcionesT})
+		"opciones": opciones})
 }
