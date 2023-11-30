@@ -15,10 +15,10 @@ type AdministradorServicios struct {
 
 type Servicio struct {
 	gorm.Model
-	Disponibilidad bool
-	FechaPartida   time.Time
-	FechaLlegada   time.Time
-	CostoServicio  float64
+	Disponibilidad bool      `gorm:"column:Disponibilidad; not null"`
+	FechaPartida   time.Time `gorm:"column:Fecha_Partida; not null"`
+	FechaLlegada   time.Time `gorm:"column:Fecha_Llegada; not null"`
+	CostoServicio  float64   `gorm:"column:Costo_Servicio; not null"`
 }
 
 // TableName overrides the table name used by User to `profiles`
@@ -69,10 +69,10 @@ type TipoAtencionTransporte struct {
 
 type Tramo struct {
 	gorm.Model
-	Distancia    int
-	FechaPartida time.Time
-	FechaLlegada time.Time
-	CostoTramo   float64
+	Distancia    int       `gorm:"column:Distancia; not null"`
+	FechaPartida time.Time `gorm:"column:Fecha_Partida; not null"`
+	FechaLlegada time.Time `gorm:"column:Fecha_Llegada; not null"`
+	CostoTramo   float64   `gorm:"column:Costo_Tramo; not null"`
 }
 
 func (Tramo) TableName() string {
@@ -81,9 +81,7 @@ func (Tramo) TableName() string {
 
 type Itinerario struct {
 	gorm.Model
-	Distancia     int
-	CiudadPartida string
-	CiudadLlegada string
+	Distancia int `gorm:"column:Distancia; not null"`
 }
 
 type Ciudad struct {
