@@ -126,6 +126,7 @@ type ItinerarioTramo struct {
 	IDItinerario int        `gorm:"primaryKey"`
 	Tramo        Tramo      `gorm:"foreignKey:IDTramo"`
 	Itinerario   Itinerario `gorm:"foreignKey:IDItinerario"`
+	Orden        int        `gorm:"column:Orden"`
 }
 
 type ServicioTransporte struct {

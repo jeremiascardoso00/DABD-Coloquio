@@ -214,6 +214,8 @@ CREATE TABLE Itinerario_x_Tramo
 (
 ID_Tramo INT NOT NULL,
 ID_Itinerario INT NOT NULL,
+Orden INT,
+
 PRIMARY KEY(ID_Tramo, ID_Itinerario),
 
 FOREIGN KEY (ID_Tramo) REFERENCES dbo.Tramo(ID),

@@ -27,6 +27,7 @@ type opciones struct {
 	Pisos               string    `gorm:"column:Pisos"`
 }
 
+/*
 func (vc *ViajeController) GetItinerariosYTramos(c *gin.Context) {
 	var opcionesI []opciones
 	var opcionesT []opciones
@@ -45,25 +46,25 @@ func (vc *ViajeController) GetItinerariosYTramos(c *gin.Context) {
 
 	date := c.Query("date")
 
-	// Intenta convertir el timestamp a un entero
+	Intenta convertir el timestamp a un entero
 	timestampInt, err := strconv.ParseInt(date, 10, 64)
 	if err != nil {
-		// Si hay un error, el timestamp no es válido
+		Si hay un error, el timestamp no es válido
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Timestamp inválido"})
 		return
 	}
 
-	// Convierte el timestamp Unix a un objeto time.Time
+	Convierte el timestamp Unix a un objeto time.Time
 	t := time.Unix(timestampInt, 0)
 
 	formattedTime := t.Format("2006-01-02")
 
 	query := vc.Txn.
 		Table("ViajaPlus.dbo.Itinerario").
-		Select(`Servicio.ID, 
+		Select(`Servicio.ID,
 				c_origen.Nombre as Origen,
 				c_destino.Nombre as Destino,
-				Servicio.Fecha_Partida, 
+				Servicio.Fecha_Partida,
 				Servicio.Fecha_Llegada,
 				Servicio.Costo_Servicio + t.Costo_Transporte as Costo,
 				Itinerario.Distancia,
@@ -91,10 +92,10 @@ func (vc *ViajeController) GetItinerariosYTramos(c *gin.Context) {
 
 	query = vc.Txn.
 		Table("ViajaPlus.dbo.Tramo").
-		Select(`Servicio.ID, 
+		Select(`Servicio.ID,
 				c_origen.Nombre as Origen,
 				c_destino.Nombre as Destino,
-				Tramo.Fecha_Partida, 
+				Tramo.Fecha_Partida,
 				Tramo.Fecha_Llegada,
 				Tramo.Costo_Tramo + t.Costo_Transporte as Costo,
 				Tramo.Distancia,
@@ -126,4 +127,172 @@ func (vc *ViajeController) GetItinerariosYTramos(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"opciones": opciones})
+}*/
+
+func (vc *ViajeController) GetItinerariosYTramos(c *gin.Context) {
+	//var opcionesI []opciones
+	var opcionesT []opciones
+
+	originCityID := c.Query("origin")
+	if originCityID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid origin city 'ID' parameter"})
+		return
+	}
+
+	destinationCityID := c.Query("destination")
+	if destinationCityID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid destination city 'ID' parameter"})
+		return
+	}
+
+	date := c.Query("date")
+
+	// Intenta convertir el timestamp a un entero
+	timestampInt, err := strconv.ParseInt(date, 10, 64)
+	if err != nil {
+		// Si hay un error, el timestamp no es válido
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Timestamp inválido"})
+		return
+	}
+
+	// Convierte el timestamp Unix a un objeto time.Time
+	t := time.Unix(timestampInt, 0)
+
+	formattedTime := t.Format("2006-01-02")
+
+	type ResultStep1 struct {
+		ID_Itinerario string
+		ID_Tramo      string
+		Orden         int
+	}
+
+	var resultStep1 []ResultStep1
+
+	//obtengo los tramos correspondientes a la ciudad origen y destino junto con su id de itinerario y su orden
+	query := vc.Txn.Raw(`
+		SELECT 
+			Itinerario.ID AS ID_Itinerario,
+			ixt.ID_Tramo AS ID_Tramo,
+			ixt.Orden 
+		FROM 
+			"ViajaPlus"."dbo"."Itinerario" 
+		INNER JOIN 
+			ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Itinerario = Itinerario.ID 
+		INNER JOIN 
+			ViajaPlus.dbo.Tramo_x_Ciudad txc ON txc.ID_Tramo = ixt.ID_Tramo  
+		WHERE 
+			(txc.ID_Ciudad = ? AND txc.Es_Origen = 1) 
+		OR 
+			(txc.ID_Ciudad = ? AND txc.Es_Origen = 0)`, originCityID, destinationCityID).
+		Scan(&resultStep1)
+	if query.Error != nil && !errors.Is(query.Error, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
+		return
+	}
+
+	query = vc.Txn.
+		Table("ViajaPlus.dbo.Itinerario i").
+		Select(`Servicio.ID,
+				c_origen.Nombre as Origen,
+				c_destino.Nombre as Destino,
+				t_origen.Fecha_Partida,
+				t_destino.Fecha_Llegada,
+				(SELECT 
+					SUM(t.Costo_Tramo) as Costo
+				FROM 
+					"ViajaPlus"."dbo"."Itinerario" 
+				INNER JOIN 
+					ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Itinerario = Itinerario.ID
+				INNER JOIN 
+					ViajaPlus.dbo.Tramo t ON t.ID = ixt.ID_Tramo 
+				WHERE 
+					Itinerario.ID = ?
+					AND ixt.Orden BETWEEN ? AND ?) + t.Costo_Transporte as Costo,
+				(SELECT 
+					SUM(t.Distancia) as Distancia
+				FROM 
+					"ViajaPlus"."dbo"."Itinerario" 
+				INNER JOIN 
+					ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Itinerario = Itinerario.ID
+				INNER JOIN 
+					ViajaPlus.dbo.Tramo t ON t.ID = ixt.ID_Tramo 
+				WHERE 
+					Itinerario.ID = ?
+				AND ixt.Orden BETWEEN ? AND ?) as Distancia,
+				t.Categoria as CategoriaTransporte,
+				t.Tipo_Atencion as TipoAtencion,
+				t.Pisos`,
+			resultStep1[0].ID_Itinerario,
+			resultStep1[0].Orden,
+			resultStep1[1].Orden,
+			resultStep1[0].ID_Itinerario,
+			resultStep1[0].Orden,
+			resultStep1[1].Orden).
+		Joins("INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt_origen ON ixt_origen.ID_Itinerario  = i.ID").
+		Joins("INNER JOIN ViajaPlus.dbo.Tramo t_origen ON t_origen.ID = ixt_origen.ID_Tramo").
+		Joins("INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_origen ON txc_origen.ID_Tramo = t_origen.ID").
+		Joins("INNER JOIN ViajaPlus.dbo.Ciudad c_origen ON c_origen.ID = txc_origen.ID_Ciudad").
+		Joins("INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt_destino ON ixt_destino.ID_Itinerario = i.ID").
+		Joins("INNER JOIN ViajaPlus.dbo.Tramo t_destino ON t_destino.ID = ixt_destino.ID_Tramo").
+		Joins("INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_destino ON txc_destino.ID_Tramo = t_destino.ID").
+		Joins("INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = txc_destino.ID_Ciudad").
+		Joins("INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = i.ID").
+		Joins("INNER JOIN ViajaPlus.dbo.Servicio ON Servicio.ID = sxi.ID_Servicio").
+		Joins("INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio = Servicio.ID").
+		Joins("INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = sxt.ID_Transporte").
+		Where("(t_origen.ID = ? and txc_origen.Es_Origen = 1)", resultStep1[0].ID_Tramo).
+		Where("(t_destino.ID = ? and txc_destino.Es_Origen = 0)", resultStep1[1].ID_Tramo).
+		Where("Servicio.Disponibilidad = 1").
+		Where("CONVERT(date, t_origen.Fecha_Partida) = ?", formattedTime).
+		Find(&opcionesT)
+
+	if query.Error != nil && !errors.Is(query.Error, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
+		return
+	}
+
+	//opciones := append(opcionesI, opcionesT...)
+
+	c.JSON(http.StatusOK, gin.H{
+		"opciones": opcionesT})
+}
+
+func (vc *ViajeController) GetAsientosSegunServicio(c *gin.Context) {
+
+	serviceID := c.Param("sid")
+	if serviceID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid service 'ID' parameter"})
+		return
+	}
+
+	type Result struct {
+		IDAsiento        int     `gorm:"column:IDAsiento"`
+		Disponibilidad   bool    `gorm:"column:Disponibilidad"`
+		Nro_Unidad       int     `gorm:"column:Nro_Unidad"`
+		Pisos            int     `gorm:"column:Pisos"`
+		Situacion        bool    `gorm:"column:Situacion"`
+		Costo_Transporte float64 `gorm:"column:Costo_Transporte"`
+		Categoria        string  `gorm:"column:Categoria"`
+		Tipo_Atencion    string  `gorm:"column:Tipo_Atencion"`
+	}
+
+	var result []Result
+
+	query := vc.Txn.Raw(`
+	SELECT a.ID as IDAsiento, a.Disponibilidad,t.Nro_Unidad,t.Pisos,t.Situacion,t.Costo_Transporte,t.Categoria,t.Tipo_Atencion
+	from ViajaPlus.dbo.Servicio s 
+	inner join ViajaPlus.dbo.Servicio_x_Transporte sxt on sxt.ID_Servicio = s.ID 
+	INNER join ViajaPlus.dbo.Transporte t on t.ID = sxt.ID_Transporte 
+	inner join ViajaPlus.dbo.Asiento a on a.ID_Transporte = t.ID 
+	WHERE s.ID = ?`, serviceID).
+		Scan(&result)
+	if query.Error != nil && !errors.Is(query.Error, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
+		return
+	}
+
+	//opciones := append(opcionesI, opcionesT...)
+
+	c.JSON(http.StatusOK, gin.H{
+		"asientos": result})
 }

@@ -79,12 +79,12 @@ VALUES (1, 1, 1),
 
 SELECT 17500 / 5
 
-INSERT INTO Itinerario_x_Tramo(ID_Itinerario, ID_Tramo)
-VALUES (1, 1),
-		(1, 2),
-		(1, 3),
-		(1, 4),
-		(1, 5)
+INSERT INTO Itinerario_x_Tramo(ID_Itinerario, ID_Tramo, Orden)
+VALUES (1, 1, 1),
+		(1, 2, 2),
+		(1, 3, 3),
+		(1, 4, 4),
+		(1, 5, 5)
 
 INSERT INTO Administrador_x_Itinerario(ID_Administrador, ID_Itinerario)
 VALUES (1, 1)

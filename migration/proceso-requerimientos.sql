@@ -375,7 +375,7 @@ AND s.Disponibilidad = 1
 --------------------------------------------------
 
 SELECT 
-	Itinerario.ID, 
+	Servicio.ID, 
 	Servicio.Disponibilidad, 
 	c_origen.Nombre as Origen,
 	c_destino.Nombre as Destino,
@@ -402,7 +402,8 @@ AND CONVERT(date, Servicio.Fecha_Partida) = '2024-01-01'
 AND "ViajaPlus"."dbo"."Itinerario"."deleted_at" IS NULL
 
 ------------------------------------------
-SELECT Tramo.ID, 
+SELECT 
+	Servicio.ID, 
 	c_origen.Nombre as Origen,
 	c_destino.Nombre as Destino,
 	Tramo.Fecha_Partida, 
@@ -428,6 +429,250 @@ AND (txc_destino.ID_Ciudad = '7' AND txc_destino.Es_Origen = 0)
 AND Servicio.Disponibilidad = 1 
 AND CONVERT(date, Tramo.Fecha_Partida) = '2024-01-01'
 -------------------------------------------------------------------------------------------------------------
+--mismas queries pero en una union
+SELECT 
+	Servicio.ID, 
+	c_origen.Nombre as Origen,
+	c_destino.Nombre as Destino,
+	Tramo.Fecha_Partida, 
+	Tramo.Fecha_Llegada,
+	Tramo.Costo_Tramo + t.Costo_Transporte as Costo,
+	Tramo.Distancia ,
+	t.Categoria as CategoriaTransporte,
+	t.Tipo_Atencion as TipoAtencion,
+	t.Pisos
+FROM "ViajaPlus"."dbo"."Tramo" 
+INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_origen ON txc_origen.ID_Tramo = Tramo.ID 
+INNER JOIN ViajaPlus.dbo.Ciudad c_origen ON c_origen.ID = txc_origen.ID_Ciudad 
+INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_destino ON txc_destino.ID_Tramo = Tramo.ID 
+INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = txc_destino.ID_Ciudad 
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Tramo = Tramo.ID 
+INNER JOIN ViajaPlus.dbo.Itinerario i ON i.ID  = ixt.ID_Itinerario 
+INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = i.ID 
+INNER JOIN ViajaPlus.dbo.Servicio ON Servicio.ID = sxi.ID_Servicio 
+INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio = Servicio.ID
+INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = sxt.ID_Transporte 
+WHERE (txc_origen.ID_Ciudad = '1' AND txc_origen.Es_Origen = 1) 
+AND (txc_destino.ID_Ciudad = '7' AND txc_destino.Es_Origen = 0) 
+AND Servicio.Disponibilidad = 1 
+AND CONVERT(date, Tramo.Fecha_Partida) = '2024-01-01'
+UNION
+SELECT 
+	Servicio.ID, 
+	c_origen.Nombre as Origen,
+	c_destino.Nombre as Destino,
+	Servicio.Fecha_Partida, 
+	Servicio.Fecha_Llegada,
+	Servicio.Costo_Servicio + t.Costo_Transporte as Costo,
+	Itinerario.Distancia,
+	t.Categoria as CategoriaTransporte,
+	t.Tipo_Atencion as TipoAtencion,
+	t.Pisos
+FROM "ViajaPlus"."dbo"."Itinerario" 
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Ciudad ixc_origen ON ixc_origen.ID_Itinerario = Itinerario.ID 
+INNER JOIN ViajaPlus.dbo.Ciudad c_origen ON c_origen.ID  = ixc_origen.ID_Ciudad 
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Ciudad ixc_destino ON ixc_destino.ID_Itinerario = Itinerario.ID 
+INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID  = ixc_destino.ID_Ciudad 
+INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = Itinerario.ID 
+INNER JOIN ViajaPlus.dbo.Servicio ON Servicio.ID = sxi.ID_Servicio 
+INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio  = Servicio.ID
+INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = sxt.ID_Transporte 
+WHERE (ixc_origen.ID_Ciudad = '1' AND ixc_origen.Es_Origen = 1) 
+AND (ixc_destino.ID_Ciudad = '2' AND ixc_destino.Es_Origen = 0) 
+AND Servicio.Disponibilidad = 1 
+AND CONVERT(date, Servicio.Fecha_Partida) = '2024-01-01' 
+AND "ViajaPlus"."dbo"."Itinerario"."deleted_at" IS NULL
+
+-------------------------------------------------------------------------------------
+
+--estoy pensando que posiblemente para contemplar la posibilidad de 
+--que un usuario pueda elegir un origen y un destino que combine varios tramos parte de un itinerario pero que no sea 
+--un itinerario completo, vamos a necesitar que la tabla Itinerario_x_Tramo tenga un nuevo campo llamado orden
+--ALTER TABLE ViajaPlus.dbo.Itinerario_x_Tramo ADD Orden int;
+
+--todos los tramos que coincidan con la ciudad de origen
+
+select * FROM 
+(
+	SELECT Itinerario.ID, txc_origen.ID_Ciudad, txc_origen.Es_Origen, c_origen.Nombre, ixt.Orden
+	FROM "ViajaPlus"."dbo"."Itinerario" 
+	INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Itinerario = Itinerario.ID 
+	INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_origen ON txc_origen.ID_Tramo = ixt.ID_Tramo  
+	INNER JOIN ViajaPlus.dbo.Ciudad c_origen ON c_origen.ID = txc_origen.ID_Ciudad 
+	WHERE (txc_origen.ID_Ciudad = '1' AND txc_origen.Es_Origen = 1) and Itinerario.ID in (1)
+	UNION
+	SELECT Itinerario.ID, txc_destino.ID_Ciudad, txc_destino.Es_Origen, c_destino.Nombre, ixt.Orden
+	FROM "ViajaPlus"."dbo"."Itinerario" 
+	INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Itinerario = Itinerario.ID 
+	INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_destino ON txc_destino.ID_Tramo = ixt.ID_Tramo 
+	INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = txc_destino.ID_Ciudad 
+	WHERE (txc_destino.ID_Ciudad = '5' AND txc_destino.Es_Origen = 0) and Itinerario.ID in (1)
+) as tramos
+where 
+
+---
+--
+--WITH ItinerariosRSA AS (
+--    SELECT Itinerario.ID
+--    FROM "ViajaPlus"."dbo"."Itinerario" 
+--    INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Itinerario = Itinerario.ID 
+--    INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc ON txc.ID_Tramo = ixt.ID_Tramo  
+--    WHERE (txc.ID_Ciudad = '1' AND txc.Es_Origen = 1) 
+--    INTERSECT
+--    SELECT Itinerario.ID
+--    FROM "ViajaPlus"."dbo"."Itinerario" 
+--    INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Itinerario = Itinerario.ID 
+--    INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc ON txc.ID_Tramo = ixt.ID_Tramo  
+--    WHERE (txc.ID_Ciudad = '2' AND txc.Es_Origen = 0) 
+--)
+--
+--SELECT * FROM 
+--(
+--    SELECT Itinerario.ID, txc_origen.ID_Ciudad, txc_origen.Es_Origen, c_origen.Nombre, ixt.Orden
+--    FROM "ViajaPlus"."dbo"."Itinerario" 
+--    INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Itinerario = Itinerario.ID 
+--    INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_origen ON txc_origen.ID_Tramo = ixt.ID_Tramo  
+--    INNER JOIN ViajaPlus.dbo.Ciudad c_origen ON c_origen.ID = txc_origen.ID_Ciudad 
+--    WHERE Itinerario.ID IN (SELECT ID FROM ItinerariosRSA)
+--    UNION
+--    SELECT Itinerario.ID, txc_destino.ID_Ciudad, txc_destino.Es_Origen, c_destino.Nombre, ixt.Orden
+--    FROM "ViajaPlus"."dbo"."Itinerario" 
+--    INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Itinerario = Itinerario.ID 
+--    INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_destino ON txc_destino.ID_Tramo = ixt.ID_Tramo 
+--    INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = txc_destino.ID_Ciudad 
+--    WHERE Itinerario.ID IN (SELECT ID FROM ItinerariosRSA)
+--) as tramos
+
+
+
+--obtengo el id del itinerario y los tramos de la ciudad origen y la ciudad destino
+SELECT 
+    Itinerario.ID AS ID_Itinerario,
+    ixt.ID_Tramo AS ID_Tramo,
+    ixt.Orden 
+FROM 
+    "ViajaPlus"."dbo"."Itinerario" 
+INNER JOIN 
+    ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Itinerario = Itinerario.ID 
+INNER JOIN 
+    ViajaPlus.dbo.Tramo_x_Ciudad txc ON txc.ID_Tramo = ixt.ID_Tramo  
+WHERE 
+    (txc.ID_Ciudad = '1' AND txc.Es_Origen = 1) 
+    OR 
+    (txc.ID_Ciudad = '5' AND txc.Es_Origen = 0)
+    
+--ahora en base al id de itinerario, id de tramos y id de ciudades y el orden de los tramos
+SELECT 
+	SUM(t.Costo_Tramo)
+FROM 
+    "ViajaPlus"."dbo"."Itinerario" 
+INNER JOIN 
+    ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Itinerario = Itinerario.ID
+INNER JOIN 
+    ViajaPlus.dbo.Tramo t ON t.ID = ixt.ID_Tramo 
+WHERE 
+    Itinerario.ID = 1
+    AND ixt.Orden BETWEEN '1' AND '4'
+
+------------------------------------------------------------------------
+
+    
+SELECT 
+	Servicio.ID, 
+	c_origen.Nombre as Origen,
+	c_destino.Nombre as Destino,
+	t_origen.Fecha_Partida, 
+	t_destino.Fecha_Llegada,
+--	Tramo.Costo_Tramo + t.Costo_Transporte as Costo,
+	t.Costo_Transporte as Costo,
+--	Tramo.Distancia ,
+	t.Categoria as CategoriaTransporte,
+	t.Tipo_Atencion as TipoAtencion,
+	t.Pisos
+FROM "ViajaPlus"."dbo".Itinerario i
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt_origen ON ixt_origen.ID_Itinerario  = i.ID 
+INNER JOIN ViajaPlus.dbo.Tramo t_origen ON t_origen.ID = ixt_origen.ID_Tramo  
+INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_origen ON txc_origen.ID_Tramo = t_origen.ID 
+INNER JOIN ViajaPlus.dbo.Ciudad c_origen ON c_origen.ID = txc_origen.ID_Ciudad 
+
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt_destino ON ixt_destino.ID_Itinerario = i.ID 
+INNER JOIN ViajaPlus.dbo.Tramo t_destino ON t_destino.ID = ixt_destino.ID_Tramo  
+INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_destino ON txc_destino.ID_Tramo = t_destino.ID 
+INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = txc_destino.ID_Ciudad 
+
+INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = i.ID 
+INNER JOIN ViajaPlus.dbo.Servicio ON Servicio.ID = sxi.ID_Servicio 
+INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio = Servicio.ID
+INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = sxt.ID_Transporte 
+WHERE (t_origen.ID = 1 and txc_origen.Es_Origen = 1) AND (t_destino.ID = 4 and txc_destino.Es_Origen = 0)
+
+AND Servicio.Disponibilidad = 1 
+AND CONVERT(date, t_origen.Fecha_Partida) = '2024-01-01'
+
+-------------------------------------------------------------------------------------
+
+    
+SELECT 
+	Servicio.ID, 
+	c_origen.Nombre as Origen,
+	c_destino.Nombre as Destino,
+	t_origen.Fecha_Partida, 
+	t_destino.Fecha_Llegada,
+	(SELECT 
+			SUM(t.Costo_Tramo) as Costo
+		FROM 
+			"ViajaPlus"."dbo"."Itinerario" 
+		INNER JOIN 
+			ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Itinerario = Itinerario.ID
+		INNER JOIN 
+			ViajaPlus.dbo.Tramo t ON t.ID = ixt.ID_Tramo 
+		WHERE 
+			Itinerario.ID = ?
+			AND ixt.Orden BETWEEN ? AND ?) + t.Costo_Transporte as Costo,
+	(SELECT 
+			SUM(t.Distancia) as Distancia
+		FROM 
+			"ViajaPlus"."dbo"."Itinerario" 
+		INNER JOIN 
+			ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Itinerario = Itinerario.ID
+		INNER JOIN 
+			ViajaPlus.dbo.Tramo t ON t.ID = ixt.ID_Tramo 
+		WHERE 
+			Itinerario.ID = ?
+		AND ixt.Orden BETWEEN ? AND ?) as Distancia,
+	t.Categoria as CategoriaTransporte,
+	t.Tipo_Atencion as TipoAtencion,
+	t.Pisos
+FROM "ViajaPlus"."dbo".Itinerario i
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt_origen ON ixt_origen.ID_Itinerario  = i.ID 
+INNER JOIN ViajaPlus.dbo.Tramo t_origen ON t_origen.ID = ixt_origen.ID_Tramo  
+INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_origen ON txc_origen.ID_Tramo = t_origen.ID 
+INNER JOIN ViajaPlus.dbo.Ciudad c_origen ON c_origen.ID = txc_origen.ID_Ciudad 
+
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt_destino ON ixt_destino.ID_Itinerario = i.ID 
+INNER JOIN ViajaPlus.dbo.Tramo t_destino ON t_destino.ID = ixt_destino.ID_Tramo  
+INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_destino ON txc_destino.ID_Tramo = t_destino.ID 
+INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = txc_destino.ID_Ciudad 
+
+INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = i.ID 
+INNER JOIN ViajaPlus.dbo.Servicio ON Servicio.ID = sxi.ID_Servicio 
+INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio = Servicio.ID
+INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = sxt.ID_Transporte 
+WHERE (t_origen.ID = 1 and txc_origen.Es_Origen = 1) AND (t_destino.ID = 4 and txc_destino.Es_Origen = 0)
+
+AND Servicio.Disponibilidad = 1 
+AND CONVERT(date, t_origen.Fecha_Partida) = '2024-01-01'
+
+-------------------------------------------------------------------------------------
+
+
+--query para traer los asientos disponibles en un viaje
+
+--en este punto contamos con todo el objeto opciones, sea tramo o itinerario
+
+
+
+-------------------------------------------------------------------------------------
 
 --2. Venta de Pasajes: Facilita la compra de pasajes para itinerarios o tramos en función de la disponibilidad.
 --3. Cancelación de Reservas a Pedido: Los clientes pueden cancelar sus reservas antes de la fecha de partida 
