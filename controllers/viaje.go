@@ -18,6 +18,8 @@ type opciones struct {
 	ID                  uint      `gorm:"primarykey"`
 	Origen              string    `gorm:"column:Origen"`
 	Destino             string    `gorm:"column:Destino"`
+	IDTramoOrigen       int       `gorm:"column:IDTramoOrigen"`
+	IDTramoDestino      int       `gorm:"column:IDTramoDestino"`
 	FechaPartida        time.Time `gorm:"column:Fecha_Partida; not null"`
 	FechaLlegada        time.Time `gorm:"column:Fecha_Llegada; not null"`
 	Costo               float64   `gorm:"column:Costo; not null"`
@@ -195,6 +197,8 @@ func (vc *ViajeController) GetItinerariosYTramos(c *gin.Context) {
 		Select(`Servicio.ID,
 				c_origen.Nombre as Origen,
 				c_destino.Nombre as Destino,
+				t_origen.ID as IDTramoOrigen,
+				t_destino.ID as IDTramoDestino,
 				t_origen.Fecha_Partida,
 				t_destino.Fecha_Llegada,
 				(SELECT 

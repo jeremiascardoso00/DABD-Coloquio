@@ -337,6 +337,21 @@ FOREIGN KEY (ID_Administrador) REFERENCES dbo.Administrador_Servicios(ID),
 FOREIGN KEY (ID_Ciudad) REFERENCES dbo.Ciudad(ID)
 );
 
+USE ViajaPlus
+
+DROP TABLE IF EXISTS Tramo_x_Reserva
+
+CREATE TABLE Tramo_x_Reserva(
+    ID_Tramo INT NOT NULL,
+    ID_Reserva INT NOT NULL,
+	Es_Origen BIT NOT NULL,
+
+    PRIMARY KEY(ID_Tramo, ID_Reserva),
+
+    FOREIGN KEY (ID_Tramo) REFERENCES dbo.tramo(ID),
+    FOREIGN KEY (ID_Reserva) REFERENCES dbo.Reserva(ID)
+)
+
 
 ALTER TABLE Servicio
 ALTER COLUMN Calidad_Servicio VARCHAR(20) NOT NULL;
