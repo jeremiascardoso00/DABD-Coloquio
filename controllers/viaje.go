@@ -300,3 +300,154 @@ func (vc *ViajeController) GetAsientosSegunServicio(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"asientos": result})
 }
+
+type Reserva struct {
+	ID       int
+	Nombre   string `gorm:"column:Nombre"`
+	Apellido string `gorm:"column:Apellido"`
+	DNI      int    `gorm:"column:DNI"`
+}
+
+func (Reserva) TableName() string {
+	return "ViajaPlus.dbo.Reserva"
+}
+
+type ReservaXCiudad struct {
+	Reserva   int    `gorm:"column:ID_Reserva"`
+	ID_Ciudad int    `gorm:"column:ID_Ciudad"`
+	Es_Origen string `gorm:"column:Es_Origen"`
+}
+
+func (ReservaXCiudad) TableName() string {
+	return "ViajaPlus.dbo.Reserva_x_Ciudad"
+}
+
+type TramoXReserva struct {
+	ID_Tramo   int `gorm:"column:ID_Tramo"`
+	ID_Reserva int `gorm:"column:ID_Reserva"`
+	Es_Origen  int `gorm:"column:Es_Origen"`
+}
+
+func (TramoXReserva) TableName() string {
+	return "ViajaPlus.dbo.Tramo_x_Reserva"
+}
+
+func (vc *ViajeController) CreateReserva(c *gin.Context) {
+
+	type RequestBody struct {
+		Nombre         string  `json:"nombre"`
+		Apellido       string  `json:"apellido"`
+		DNI            int     `json:"dni"`
+		IDServicio     uint    `json:"service"`
+		IDTransporte   uint    `json:"transporte"`
+		IDAsiento      uint    `json:"asiento"`
+		Origen         int     `json:"origin"`
+		Destino        int     `json:"destination"`
+		IDTramoOrigen  int     `json:"IDTramoOrigen"`
+		IDTramoDestino int     `json:"IDTramoDestino"`
+		Costo          float64 `json:"Costo"`
+	}
+
+	var requestBody RequestBody
+
+	err := c.BindJSON(&requestBody)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// reserva := Reserva{Nombre: requestBody.Nombre, Apellido: requestBody.Apellido, DNI: requestBody.DNI}
+	// query := vc.Txn.Create(&reserva)
+	// if query.Error != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
+	// 	return
+	// }
+
+	type Result struct {
+		ID uint
+	}
+
+	var result Result
+	// queryStr := "INSERT INTO Reserva (Nombre, Apellido, DNI) OUTPUT Inserted.ID VALUES (?, ?, ?)"
+	queryStr := `INSERT INTO ViajaPlus.dbo.Reserva
+	( Nombre, Apellido, DNI, Estado, Costo, ID_Asiento, ID_Transporte) OUTPUT Inserted.ID
+	VALUES( ?, ?, ?, ?, ?, ?, ?);`
+	err = vc.Txn.Raw(queryStr, requestBody.Nombre,
+		requestBody.Apellido,
+		requestBody.DNI,
+		"test",
+		requestBody.Costo,
+		requestBody.IDAsiento,
+		requestBody.IDTransporte).
+		Scan(&result).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// reservaXCiudadOrigen := ReservaXCiudad{Reserva: result.ID, ID_Ciudad: requestBody.Origen, Es_Origen: "1"}
+	// query = vc.Txn.Create(&reservaXCiudadOrigen)
+	// if query.Error != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
+	// 	return
+	// }
+	// reservaXCiudadDestino := ReservaXCiudad{Reserva: result.ID, ID_Ciudad: requestBody.Destino, Es_Origen: "0"}
+	// query = vc.Txn.Create(&reservaXCiudadDestino)
+	// if query.Error != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
+	// 	return
+	// }
+	// tramoXReservaOrigen := TramoXReserva{ID_Tramo: requestBody.IDTramoOrigen, ID_Reserva: reserva.ID, Es_Origen: 1}
+	// query = vc.Txn.Create(&tramoXReservaOrigen)
+	// if query.Error != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
+	// 	return
+	// }
+	// tramoXReservaDestino := TramoXReserva{ID_Tramo: requestBody.IDTramoDestino, ID_Reserva: reserva.ID, Es_Origen: 0}
+	// query = vc.Txn.Create(&tramoXReservaDestino)
+	// if query.Error != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
+	// 	return
+	// }
+
+	queryStr = "INSERT INTO ReservaXCiudad (Reserva, ID_Ciudad, Es_Origen) VALUES (?, ?, ?)"
+	err = vc.Txn.Exec(queryStr, result.ID, requestBody.Origen, "1").Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Insertar en ReservaXCiudad para Destino
+	queryStr = "INSERT INTO ReservaXCiudad (Reserva, ID_Ciudad, Es_Origen) VALUES (?, ?, ?)"
+	err = vc.Txn.Exec(queryStr, result.ID, requestBody.Destino, "0").Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Insertar en TramoXReserva para Origen
+	queryStr = "INSERT INTO TramoXReserva (ID_Tramo, ID_Reserva, Es_Origen) VALUES (?, ?, ?)"
+	err = vc.Txn.Exec(queryStr, requestBody.IDTramoOrigen, result.ID, 1).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Insertar en TramoXReserva para Destino
+	queryStr = "INSERT INTO TramoXReserva (ID_Tramo, ID_Reserva, Es_Origen) VALUES (?, ?, ?)"
+	err = vc.Txn.Exec(queryStr, requestBody.IDTramoDestino, result.ID, 0).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// todo:
+	// necesitamos ajustar el endpoint de opciones de viaje para que devuelva el id del transporte
+	// ademas ajustar todo el flujo de front para que el idTransport y el Unico IDAsiento que tendra la reserva
+	// llegue hasta esta instancia de POST
+
+	// una vez aca ya estan armadas las queries y la estructura, necesitamos esos campos
+
+	c.JSON(http.StatusOK, gin.H{
+		"reserva": result.ID})
+}

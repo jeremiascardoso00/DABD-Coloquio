@@ -171,8 +171,8 @@ ALTER TABLE Asiento
 ADD deleted_at DATETIME2;
 ALTER TABLE Ciudad
 ADD deleted_at DATETIME2;
-ALTER TABLE Estado_Reserva
-ADD deleted_at DATETIME2;
+-- ALTER TABLE Estado_Reserva
+-- ADD deleted_at DATETIME2;
 ALTER TABLE Itinerario
 ADD deleted_at DATETIME2;
 ALTER TABLE Itinerario_x_Tramo
