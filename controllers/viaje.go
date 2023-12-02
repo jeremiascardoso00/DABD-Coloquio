@@ -387,31 +387,6 @@ func (vc *ViajeController) CreateReserva(c *gin.Context) {
 		return
 	}
 
-	// reservaXCiudadOrigen := ReservaXCiudad{Reserva: result.ID, ID_Ciudad: requestBody.Origen, Es_Origen: "1"}
-	// query = vc.Txn.Create(&reservaXCiudadOrigen)
-	// if query.Error != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
-	// 	return
-	// }
-	// reservaXCiudadDestino := ReservaXCiudad{Reserva: result.ID, ID_Ciudad: requestBody.Destino, Es_Origen: "0"}
-	// query = vc.Txn.Create(&reservaXCiudadDestino)
-	// if query.Error != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
-	// 	return
-	// }
-	// tramoXReservaOrigen := TramoXReserva{ID_Tramo: requestBody.IDTramoOrigen, ID_Reserva: reserva.ID, Es_Origen: 1}
-	// query = vc.Txn.Create(&tramoXReservaOrigen)
-	// if query.Error != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
-	// 	return
-	// }
-	// tramoXReservaDestino := TramoXReserva{ID_Tramo: requestBody.IDTramoDestino, ID_Reserva: reserva.ID, Es_Origen: 0}
-	// query = vc.Txn.Create(&tramoXReservaDestino)
-	// if query.Error != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
-	// 	return
-	// }
-
 	queryStr = "INSERT INTO ReservaXCiudad (Reserva, ID_Ciudad, Es_Origen) VALUES (?, ?, ?)"
 	err = vc.Txn.Exec(queryStr, result.ID, requestBody.Origen, "1").Error
 	if err != nil {
@@ -442,13 +417,6 @@ func (vc *ViajeController) CreateReserva(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	// todo:
-	// necesitamos ajustar el endpoint de opciones de viaje para que devuelva el id del transporte
-	// ademas ajustar todo el flujo de front para que el idTransport y el Unico IDAsiento que tendra la reserva
-	// llegue hasta esta instancia de POST
-
-	// una vez aca ya estan armadas las queries y la estructura, necesitamos esos campos
 
 	c.JSON(http.StatusOK, gin.H{
 		"reserva": result.ID})
