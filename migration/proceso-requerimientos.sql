@@ -616,6 +616,8 @@ SELECT
 	Servicio.ID, 
 	c_origen.Nombre as Origen,
 	c_destino.Nombre as Destino,
+	t_origen.ID as IDTramoOrigen,
+	t_destino.ID as IDTramoDestino,
 	t_origen.Fecha_Partida, 
 	t_destino.Fecha_Llegada,
 	(SELECT 
@@ -627,8 +629,8 @@ SELECT
 		INNER JOIN 
 			ViajaPlus.dbo.Tramo t ON t.ID = ixt.ID_Tramo 
 		WHERE 
-			Itinerario.ID = ?
-			AND ixt.Orden BETWEEN ? AND ?) + t.Costo_Transporte as Costo,
+			Itinerario.ID = 1
+			AND ixt.Orden BETWEEN 1 AND 4) + t.Costo_Transporte as Costo,
 	(SELECT 
 			SUM(t.Distancia) as Distancia
 		FROM 
@@ -638,8 +640,9 @@ SELECT
 		INNER JOIN 
 			ViajaPlus.dbo.Tramo t ON t.ID = ixt.ID_Tramo 
 		WHERE 
-			Itinerario.ID = ?
-		AND ixt.Orden BETWEEN ? AND ?) as Distancia,
+			Itinerario.ID = 1
+		AND ixt.Orden BETWEEN 1 AND 4) as Distancia,
+	t.ID as IDTransporte,
 	t.Categoria as CategoriaTransporte,
 	t.Tipo_Atencion as TipoAtencion,
 	t.Pisos
@@ -669,10 +672,140 @@ AND CONVERT(date, t_origen.Fecha_Partida) = '2024-01-01'
 --query para traer los asientos disponibles en un viaje
 
 --en este punto contamos con todo el objeto opciones, sea tramo o itinerario
+--se obtienen todos los asientos segun service id
 
+SELECT a.ID as IDAsiento, a.Disponibilidad,t.Nro_Unidad,t.Pisos,t.Situacion,t.Costo_Transporte,t.Categoria,t.Tipo_Atencion
+from ViajaPlus.dbo.Servicio s 
+inner join ViajaPlus.dbo.Servicio_x_Transporte sxt on sxt.ID_Servicio = s.ID 
+INNER join ViajaPlus.dbo.Transporte t on t.ID = sxt.ID_Transporte 
+inner join ViajaPlus.dbo.Asiento a on a.ID_Transporte = t.ID 
+WHERE s.ID = 1
 
 
 -------------------------------------------------------------------------------------
+
+
+--Venta de pasajes
+Use ViajaPlus
+;WITH DatosCiudad AS (
+    SELECT
+		O.ID AS IdCiudadOrigen,
+        D.ID AS IdCiudadDestino,
+        T.ID AS IdTramo,
+        I.ID AS IdItinerario
+    FROM Tramo_x_Ciudad CT
+    INNER JOIN Ciudad O ON CT.Id_Ciudad = O.ID
+    INNER JOIN Tramo T ON CT.Id_Tramo = T.ID
+    INNER JOIN Tramo_x_Ciudad CD ON T.ID = CD.Id_Tramo
+    INNER JOIN Ciudad D ON CD.ID_Ciudad = D.ID
+    INNER JOIN Itinerario_x_Tramo TI ON T.ID = TI.ID_Tramo
+    INNER JOIN Itinerario I ON TI.ID_Itinerario = I.ID
+)
+SELECT
+    DC.IdCiudadOrigen,
+    DC.IdCiudadDestino,
+    DC.IdTramo,
+    DC.IdItinerario
+FROM DatosCiudad DC
+WHERE
+    (DC.IdCiudadOrigen = 1 AND DC.IdCiudadDestino = 2)
+    OR
+    (DC.IdItinerario IS NOT NULL AND EXISTS (
+        SELECT 1
+        FROM DatosCiudad SubDC
+        WHERE
+            SubDC.IdCiudadOrigen = 1
+            AND SubDC.IdCiudadDestino = 2
+            AND SubDC.IdItinerario = DC.IdItinerario
+    ));
+
+--buscar nombre ciudad, obtener id ciudad
+--con id_ciudad en tramox_ciudad
+
+-----------------------------------------------------------------------------------
+   
+--USE ViajaPlus
+--
+--DROP TABLE IF EXISTS Tramo_x_Reserva
+--
+--CREATE TABLE Tramo_x_Reserva(
+--    ID_Tramo INT NOT NULL,
+--    ID_Reserva INT NOT NULL,
+--		Es_Origen BIT NOT NULL,
+--
+--    PRIMARY KEY(ID_Tramo, ID_Reserva),
+--
+--    FOREIGN KEY (ID_Tramo) REFERENCES dbo.tramo(ID),
+--    FOREIGN KEY (ID_Reserva) REFERENCES dbo.Reserva(ID)
+--)
+   -------------------------------------------------------------------------------
+
+   --crear una nueva reserva
+   --
+   
+   select t.ID from ViajaPlus.dbo.Transporte t
+	inner join ViajaPlus.dbo.Servicio s ON s.ID = 1
+	
+	  select * from ViajaPlus.dbo.Transporte t
+	inner join ViajaPlus.dbo.Servicio s ON s.ID = 1
+
+   INSERT INTO ViajaPlus.dbo.Reserva
+	( Nombre, Apellido, DNI)
+	VALUES('Nombre', 'Apellido', 40000000);
+
+INSERT INTO "ViajaPlus"."dbo"."Reserva" ("Nombre","Apellido","DNI") 
+OUTPUT INSERTED."id" VALUES ('Juan','Perez',12345678);
+--     
+--	INSERT INTO ViajaPlus.dbo.Reserva_x_Ciudad
+--	(Reserva, ID_Ciudad, Es_Origen)
+--	VALUES( 0, 0, '');
+--   
+--	INSERT INTO ViajaPlus.dbo.Tramo_x_Reserva
+--	(ID_Tramo, ID_Reserva, Es_Origen)
+--	VALUES(0, 0, 0);
+--		INSERT INTO ViajaPlus.dbo.Tramo_x_Reserva
+--	(ID_Tramo, ID_Reserva, Es_Origen)
+--	VALUES(0, 0, 0);
+
+   -------------------------------------------------------------------------------
+   USE ViajaPlus
+
+   
+   SELECT R.ID AS idReserva, R.Nombre AS nombreReserva, R.Apellido AS apellidoReserva, R.DNI AS DNIReserva, R.Estado AS estadoReserva, R.Costo AS costeReserva,
+        C.ID AS idCiudad, C.Nombre AS nombreCiudad,
+        T.ID AS idTramo, T.Fecha_Partida AS fechaPartidaTramo, T.Fecha_Llegada AS fechaLlegadaTramo, T.Distancia AS distanciaTramo, T.Costo_Tramo AS costeTramo,
+        I.ID AS idItinerario,
+        S.ID AS idServicio, S.Fecha_Partida AS fechaPartidaServicio, S.Fecha_Llegada AS fechaLlegadaServicio, S.Disponibilidad AS disponibilidadServicio, S.Calidad_Servicio AS calidadServicio, S.Costo_Servicio AS costeServicio,
+        TRA.ID AS idTransporte, TRA.Nro_Unidad AS nroUnidad, TRA.Situacion AS situacionTransporte, TRA.Tipo_Atencion AS atencionTransporte, TRA.Categoria AS categoriaTransporte, TRA.Capacidad AS capacidadTransporte, TRA.Costo_Transporte AS costeTransporte,
+        A.ID AS idAsiento, A.Disponibilidad AS disponibilidadAsiento, A.ID_Transporte AS transporteAsociado
+
+FROM Reserva R
+INNER JOIN Reserva_x_Ciudad RC ON RC.ID_Ciudad = R.ID
+INNER JOIN Ciudad C ON C.ID = RC.ID_Ciudad
+INNER JOIN Tramo_x_Reserva TR ON TR.ID_Reserva = R.ID
+INNER JOIN Tramo T ON T.ID = TR.ID_Tramo
+INNER JOIN Itinerario_x_Tramo IT ON IT.ID_Tramo = T.ID
+INNER JOIN Itinerario I ON I.ID = IT.ID_Itinerario
+INNER JOIN Servicio_x_Itinerario SI ON SI.ID_Itinerario = I.ID
+INNER JOIN Servicio S ON S.ID = SI.ID_Servicio
+INNER JOIN Servicio_x_Transporte ST ON ST.ID_Servicio = S.ID
+INNER JOIN Transporte TRA ON TRA.ID = ST.ID_Transporte
+INNER JOIN Asiento A ON A.ID_Transporte = TRA.ID
+   --------------------------------------------------------------------------------
+
+ALTER TABLE ViajaPlus.dbo.Reserva
+ADD ID_Asiento INT;
+ALTER TABLE ViajaPlus.dbo.Reserva
+ADD ID_Transporte INT;
+
+ ALTER TABLE ViajaPlus.dbo.Reserva
+ADD CONSTRAINT FK_Reserva_Asiento
+    FOREIGN KEY (ID_Asiento, ID_Transporte)
+    REFERENCES ViajaPlus.dbo.Asiento(ID, ID_Transporte);
+
+--ALTER TABLE ViajaPlus.dbo.Servicio ADD Calidad_Servicio varchar(40) NULL;
+--ALTER TABLE ViajaPlus.dbo.Transporte ADD Capacidad int NULL;
+   
 
 --2. Venta de Pasajes: Facilita la compra de pasajes para itinerarios o tramos en función de la disponibilidad.
 --3. Cancelación de Reservas a Pedido: Los clientes pueden cancelar sus reservas antes de la fecha de partida 

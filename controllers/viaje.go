@@ -24,6 +24,7 @@ type opciones struct {
 	FechaLlegada        time.Time `gorm:"column:Fecha_Llegada; not null"`
 	Costo               float64   `gorm:"column:Costo; not null"`
 	Distancia           int       `gorm:"column:Distancia; not null"`
+	IDTransporte        int       `gorm:"column:IDTransporte"`
 	CategoriaTransporte string    `gorm:"column:CategoriaTransporte"`
 	TipoAtencion        string    `gorm:"column:TipoAtencion"`
 	Pisos               string    `gorm:"column:Pisos"`
@@ -223,6 +224,7 @@ func (vc *ViajeController) GetItinerariosYTramos(c *gin.Context) {
 				WHERE 
 					Itinerario.ID = ?
 				AND ixt.Orden BETWEEN ? AND ?) as Distancia,
+				t.ID as IDTransporte,
 				t.Categoria as CategoriaTransporte,
 				t.Tipo_Atencion as TipoAtencion,
 				t.Pisos`,
@@ -341,8 +343,8 @@ func (vc *ViajeController) CreateReserva(c *gin.Context) {
 		IDServicio     uint    `json:"service"`
 		IDTransporte   uint    `json:"transporte"`
 		IDAsiento      uint    `json:"asiento"`
-		Origen         int     `json:"origin"`
-		Destino        int     `json:"destination"`
+		Origen         int     `json:"origen"`
+		Destino        int     `json:"destino"`
 		IDTramoOrigen  int     `json:"IDTramoOrigen"`
 		IDTramoDestino int     `json:"IDTramoDestino"`
 		Costo          float64 `json:"Costo"`
@@ -375,7 +377,7 @@ func (vc *ViajeController) CreateReserva(c *gin.Context) {
 	err = vc.Txn.Raw(queryStr, requestBody.Nombre,
 		requestBody.Apellido,
 		requestBody.DNI,
-		"test",
+		"Reservado",
 		requestBody.Costo,
 		requestBody.IDAsiento,
 		requestBody.IDTransporte).

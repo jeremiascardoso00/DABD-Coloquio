@@ -180,20 +180,20 @@ Costo MONEY NOT NULL,
 
 );
 -----------------------------------------
-USE ViajaPlus
+-- USE ViajaPlus
 
-DROP TABLE IF EXISTS Estado_Reserva
+-- DROP TABLE IF EXISTS Estado_Reserva
 
-CREATE TABLE Estado_Reserva
-(
-ID INT IDENTITY(1,1) NOT NULL,
-ID_Reserva INT NOT NULL,
-PRIMARY KEY(ID, ID_Reserva),
+-- CREATE TABLE Estado_Reserva
+-- (
+-- ID INT IDENTITY(1,1) NOT NULL,
+-- ID_Reserva INT NOT NULL,
+-- PRIMARY KEY(ID, ID_Reserva),
 
-Estado VARCHAR NOT NULL,
+-- Estado VARCHAR NOT NULL,
 
-FOREIGN KEY (ID_Reserva) REFERENCES dbo.Reserva(ID)
-);
+-- FOREIGN KEY (ID_Reserva) REFERENCES dbo.Reserva(ID)
+-- );
 -----------------------------------------------------------------------------------------------------
 USE ViajaPlus
 
