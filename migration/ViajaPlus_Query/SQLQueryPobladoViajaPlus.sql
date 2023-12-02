@@ -103,12 +103,6 @@ VALUES (1, '20240101 12:00:00.0000000', '20240102 02:15:00.0000000', '$17500')
 INSERT INTO Servicio_x_Itinerario(ID_Servicio, ID_Itinerario)
 VALUES (1, 1)
 
-
-
-
-
-
-
 --Disponibilidad bit = 1 Est� disponible, bit = 0 no est� disponible
 INSERT INTO Transporte(Nro_Unidad, Pisos, Situacion, Costo_Transporte, Categoria, Tipo_Atencion)
 VALUES (1001, 1, 1, '$1000', 'Comun', 'Comun'),
@@ -135,10 +129,6 @@ VALUES (1,1),
 
 INSERT INTO Administrador_x_Servicio(ID_Administrador, ID_Servicio)
 VALUES (1,1)
-
-select * from Administrador_Servicios as2 
-select * from Transporte t 
-
 
 INSERT INTO Administrador_x_Transporte(ID_Administrador, ID_Transporte)
 VALUES (1,8),

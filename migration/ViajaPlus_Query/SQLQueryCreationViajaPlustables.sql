@@ -365,8 +365,9 @@ ADD CONSTRAINT FK_Reserva_Asiento
     FOREIGN KEY (ID_Asiento, ID_Transporte)
     REFERENCES ViajaPlus.dbo.Asiento(ID, ID_Transporte);
 
-ALTER TABLE ViajaPlus.dbo.Servicio ADD Calidad_Servicio varchar(40) NULL;
-ALTER TABLE ViajaPlus.dbo.Transporte ADD Capacidad int NULL;
+ALTER TABLE ViajaPlus.dbo.Servicio ADD Calidad_Servicio varchar(40);
+ALTER TABLE ViajaPlus.dbo.Servicio ADD  DEFAULT 'Comun' FOR Calidad_Servicio;
+ALTER TABLE ViajaPlus.dbo.Transporte ADD Capacidad int;
 
 -- -- CREATE PROCEDURE VerificarReservasPorExpiracion
 -- --     AS

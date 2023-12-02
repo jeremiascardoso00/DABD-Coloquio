@@ -257,8 +257,6 @@ func (vc *ViajeController) GetItinerariosYTramos(c *gin.Context) {
 		return
 	}
 
-	//opciones := append(opcionesI, opcionesT...)
-
 	c.JSON(http.StatusOK, gin.H{
 		"opciones": opcionesT})
 }
@@ -339,7 +337,7 @@ func (vc *ViajeController) CreateReserva(c *gin.Context) {
 	type RequestBody struct {
 		Nombre         string  `json:"nombre"`
 		Apellido       string  `json:"apellido"`
-		DNI            int     `json:"dni"`
+		DNI            string  `json:"dni"`
 		IDServicio     uint    `json:"service"`
 		IDTransporte   uint    `json:"transporte"`
 		IDAsiento      uint    `json:"asiento"`
@@ -357,13 +355,6 @@ func (vc *ViajeController) CreateReserva(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	// reserva := Reserva{Nombre: requestBody.Nombre, Apellido: requestBody.Apellido, DNI: requestBody.DNI}
-	// query := vc.Txn.Create(&reserva)
-	// if query.Error != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
-	// 	return
-	// }
 
 	type Result struct {
 		ID uint
@@ -387,7 +378,7 @@ func (vc *ViajeController) CreateReserva(c *gin.Context) {
 		return
 	}
 
-	queryStr = "INSERT INTO ReservaXCiudad (Reserva, ID_Ciudad, Es_Origen) VALUES (?, ?, ?)"
+	queryStr = "INSERT INTO ViajaPlus.dbo.Reserva_x_Ciudad (ID_Reserva, ID_Ciudad, Es_Origen) VALUES (?, ?, ?)"
 	err = vc.Txn.Exec(queryStr, result.ID, requestBody.Origen, "1").Error
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -395,7 +386,7 @@ func (vc *ViajeController) CreateReserva(c *gin.Context) {
 	}
 
 	// Insertar en ReservaXCiudad para Destino
-	queryStr = "INSERT INTO ReservaXCiudad (Reserva, ID_Ciudad, Es_Origen) VALUES (?, ?, ?)"
+	queryStr = "INSERT INTO ViajaPlus.dbo.Reserva_x_Ciudad (ID_Reserva, ID_Ciudad, Es_Origen) VALUES (?, ?, ?)"
 	err = vc.Txn.Exec(queryStr, result.ID, requestBody.Destino, "0").Error
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -403,7 +394,7 @@ func (vc *ViajeController) CreateReserva(c *gin.Context) {
 	}
 
 	// Insertar en TramoXReserva para Origen
-	queryStr = "INSERT INTO TramoXReserva (ID_Tramo, ID_Reserva, Es_Origen) VALUES (?, ?, ?)"
+	queryStr = "INSERT INTO ViajaPlus.dbo.Tramo_x_Reserva (ID_Tramo, ID_Reserva, Es_Origen) VALUES (?, ?, ?)"
 	err = vc.Txn.Exec(queryStr, requestBody.IDTramoOrigen, result.ID, 1).Error
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -411,12 +402,16 @@ func (vc *ViajeController) CreateReserva(c *gin.Context) {
 	}
 
 	// Insertar en TramoXReserva para Destino
-	queryStr = "INSERT INTO TramoXReserva (ID_Tramo, ID_Reserva, Es_Origen) VALUES (?, ?, ?)"
+	queryStr = "INSERT INTO ViajaPlus.dbo.Tramo_x_Reserva (ID_Tramo, ID_Reserva, Es_Origen) VALUES (?, ?, ?)"
 	err = vc.Txn.Exec(queryStr, requestBody.IDTramoDestino, result.ID, 0).Error
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	//el paso que sigue despues de hacer la reserva es cambiar a le estado de las cosas que reservas a no disponible,
+	//algunas de las cosas pueden ser asientos, y en base a eso revisar si todos los asientos de un transporte de un viaje estan ocupados
+	//con la nueva reserva/
 
 	c.JSON(http.StatusOK, gin.H{
 		"reserva": result.ID})
