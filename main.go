@@ -62,6 +62,7 @@ func main() {
 	r.GET("/viaje/opciones", vc.GetItinerariosYTramos)
 	r.GET("/viaje/asientos/:sid", vc.GetAsientosSegunServicio)
 	r.POST("/viaje/reserva", vc.CreateReserva)
+	r.GET("/viaje/reservas", vc.GetReservas)
 
 	r.Run(":3000")
 

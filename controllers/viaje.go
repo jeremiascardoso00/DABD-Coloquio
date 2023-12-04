@@ -30,108 +30,6 @@ type opciones struct {
 	Pisos               string    `gorm:"column:Pisos"`
 }
 
-/*
-func (vc *ViajeController) GetItinerariosYTramos(c *gin.Context) {
-	var opcionesI []opciones
-	var opcionesT []opciones
-
-	originCityID := c.Query("origin")
-	if originCityID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid origin city 'ID' parameter"})
-		return
-	}
-
-	destinationCityID := c.Query("destination")
-	if destinationCityID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid destination city 'ID' parameter"})
-		return
-	}
-
-	date := c.Query("date")
-
-	Intenta convertir el timestamp a un entero
-	timestampInt, err := strconv.ParseInt(date, 10, 64)
-	if err != nil {
-		Si hay un error, el timestamp no es válido
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Timestamp inválido"})
-		return
-	}
-
-	Convierte el timestamp Unix a un objeto time.Time
-	t := time.Unix(timestampInt, 0)
-
-	formattedTime := t.Format("2006-01-02")
-
-	query := vc.Txn.
-		Table("ViajaPlus.dbo.Itinerario").
-		Select(`Servicio.ID,
-				c_origen.Nombre as Origen,
-				c_destino.Nombre as Destino,
-				Servicio.Fecha_Partida,
-				Servicio.Fecha_Llegada,
-				Servicio.Costo_Servicio + t.Costo_Transporte as Costo,
-				Itinerario.Distancia,
-				t.Categoria as CategoriaTransporte,
-				t.Tipo_Atencion as TipoAtencion,
-				t.Pisos`).
-		Joins("INNER JOIN ViajaPlus.dbo.Itinerario_x_Ciudad ixc_origen ON ixc_origen.ID_Itinerario = Itinerario.ID").
-		Joins("INNER JOIN ViajaPlus.dbo.Ciudad c_origen ON c_origen.ID = ixc_origen.ID_Ciudad").
-		Joins("INNER JOIN ViajaPlus.dbo.Itinerario_x_Ciudad ixc_destino ON ixc_destino.ID_Itinerario = Itinerario.ID").
-		Joins("INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = ixc_destino.ID_Ciudad").
-		Joins("INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = Itinerario.ID").
-		Joins("INNER JOIN ViajaPlus.dbo.Servicio ON Servicio.ID = sxi.ID_Servicio").
-		Joins("INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio  = Servicio.ID").
-		Joins("INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = sxt.ID_Transporte").
-		Where("ixc_origen.ID_Ciudad = ? AND ixc_origen.Es_Origen = 1", originCityID).
-		Where("ixc_destino.ID_Ciudad = ? AND ixc_destino.Es_Origen = 0", destinationCityID).
-		Where("Servicio.Disponibilidad = ?", 1).
-		Where("CONVERT(date, Servicio.Fecha_Partida) = ?", formattedTime).
-		Find(&opcionesI)
-
-	if query.Error != nil && !errors.Is(query.Error, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	query = vc.Txn.
-		Table("ViajaPlus.dbo.Tramo").
-		Select(`Servicio.ID,
-				c_origen.Nombre as Origen,
-				c_destino.Nombre as Destino,
-				Tramo.Fecha_Partida,
-				Tramo.Fecha_Llegada,
-				Tramo.Costo_Tramo + t.Costo_Transporte as Costo,
-				Tramo.Distancia,
-				t.Categoria as CategoriaTransporte,
-				t.Tipo_Atencion as TipoAtencion,
-				t.Pisos`).
-		Joins("INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_origen ON txc_origen.ID_Tramo  = Tramo.ID").
-		Joins("INNER JOIN ViajaPlus.dbo.Ciudad c_origen ON c_origen.ID = txc_origen.ID_Ciudad").
-		Joins("INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_destino ON txc_destino.ID_Tramo = Tramo.ID").
-		Joins("INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = txc_destino.ID_Ciudad").
-		Joins("INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt ON ixt.ID_Tramo = Tramo.ID").
-		Joins("INNER JOIN ViajaPlus.dbo.Itinerario i ON i.ID  = ixt.ID_Itinerario").
-		Joins("INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = i.ID").
-		Joins("INNER JOIN ViajaPlus.dbo.Servicio ON Servicio.ID = sxi.ID_Servicio").
-		Joins("INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio  = Servicio.ID").
-		Joins("INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = sxt.ID_Transporte").
-		Where("txc_origen.ID_Ciudad = ? AND txc_origen.Es_Origen = 1", originCityID).
-		Where("txc_destino.ID_Ciudad = ? AND txc_destino.Es_Origen = 0", destinationCityID).
-		Where("Servicio.Disponibilidad = ?", 1).
-		Where("CONVERT(date, Tramo.Fecha_Partida) = ?", formattedTime).
-		Find(&opcionesT)
-
-	if query.Error != nil && !errors.Is(query.Error, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	opciones := append(opcionesI, opcionesT...)
-
-	c.JSON(http.StatusOK, gin.H{
-		"opciones": opciones})
-}*/
-
 func (vc *ViajeController) GetItinerariosYTramos(c *gin.Context) {
 	//var opcionesI []opciones
 	var opcionesT []opciones
@@ -300,52 +198,21 @@ func (vc *ViajeController) GetAsientosSegunServicio(c *gin.Context) {
 		"asientos": result})
 }
 
-type Reserva struct {
-	ID       int
-	Nombre   string `gorm:"column:Nombre"`
-	Apellido string `gorm:"column:Apellido"`
-	DNI      int    `gorm:"column:DNI"`
-}
-
-func (Reserva) TableName() string {
-	return "ViajaPlus.dbo.Reserva"
-}
-
-type ReservaXCiudad struct {
-	Reserva   int    `gorm:"column:ID_Reserva"`
-	ID_Ciudad int    `gorm:"column:ID_Ciudad"`
-	Es_Origen string `gorm:"column:Es_Origen"`
-}
-
-func (ReservaXCiudad) TableName() string {
-	return "ViajaPlus.dbo.Reserva_x_Ciudad"
-}
-
-type TramoXReserva struct {
-	ID_Tramo   int `gorm:"column:ID_Tramo"`
-	ID_Reserva int `gorm:"column:ID_Reserva"`
-	Es_Origen  int `gorm:"column:Es_Origen"`
-}
-
-func (TramoXReserva) TableName() string {
-	return "ViajaPlus.dbo.Tramo_x_Reserva"
+type RequestBody struct {
+	Nombre         string  `json:"nombre"`
+	Apellido       string  `json:"apellido"`
+	DNI            string  `json:"dni"`
+	IDServicio     uint    `json:"service"`
+	IDTransporte   uint    `json:"transporte"`
+	IDAsiento      uint    `json:"asiento"`
+	Origen         int     `json:"origen"`
+	Destino        int     `json:"destino"`
+	IDTramoOrigen  int     `json:"IDTramoOrigen"`
+	IDTramoDestino int     `json:"IDTramoDestino"`
+	Costo          float64 `json:"Costo"`
 }
 
 func (vc *ViajeController) CreateReserva(c *gin.Context) {
-
-	type RequestBody struct {
-		Nombre         string  `json:"nombre"`
-		Apellido       string  `json:"apellido"`
-		DNI            string  `json:"dni"`
-		IDServicio     uint    `json:"service"`
-		IDTransporte   uint    `json:"transporte"`
-		IDAsiento      uint    `json:"asiento"`
-		Origen         int     `json:"origen"`
-		Destino        int     `json:"destino"`
-		IDTramoOrigen  int     `json:"IDTramoOrigen"`
-		IDTramoDestino int     `json:"IDTramoDestino"`
-		Costo          float64 `json:"Costo"`
-	}
 
 	var requestBody RequestBody
 
@@ -450,4 +317,62 @@ func (vc *ViajeController) CreateReserva(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"reserva": result.ID})
+}
+
+type Reserva struct {
+	gorm.Model
+	Nombre          string
+	Apellido        string
+	DNI             string
+	Estado          string
+	Costo           float64
+	ID_Asiento      int
+	ID_Transporte   int
+	CiudadOrigen    string
+	CiudadDestino   string
+	IDCiudadOrigen  uint
+	IDCiudadDestino uint
+}
+
+func (vc *ViajeController) GetReservas(c *gin.Context) {
+
+	var result []Reserva
+
+	query := vc.Txn.Raw(`
+	SELECT 
+		r.ID, r.Nombre, r.Apellido, r.DNI, r.Estado, r.Costo, r.ID_Asiento, r.ID_Transporte,
+		origen.Nombre AS Ciudad_Origen,
+		destino.Nombre AS Ciudad_Destino,
+		origen.ID_Ciudad AS IDCiudad_Origen,
+		destino.ID_Ciudad AS IDCiudad_Destino
+	FROM 
+		ViajaPlus.dbo.Reserva r 
+	INNER JOIN 
+		(
+			SELECT rxc.ID_Reserva, rxc.ID_Ciudad, c.Nombre
+			FROM ViajaPlus.dbo.Reserva_x_Ciudad rxc
+			INNER JOIN ViajaPlus.dbo.Ciudad c ON c.ID = rxc.ID_Ciudad
+			WHERE rxc.Es_Origen = 1
+		) origen 
+	ON 
+		origen.ID_Reserva = r.ID
+	INNER JOIN 
+		(
+			SELECT rxc.ID_Reserva, rxc.ID_Ciudad, c.Nombre
+			FROM ViajaPlus.dbo.Reserva_x_Ciudad rxc
+			INNER JOIN ViajaPlus.dbo.Ciudad c ON c.ID = rxc.ID_Ciudad
+			WHERE rxc.Es_Origen = 0
+		) destino 
+	ON 
+		destino.ID_Reserva = r.ID`).
+		Scan(&result)
+	if query.Error != nil && !errors.Is(query.Error, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
+		return
+	}
+
+	//opciones := append(opcionesI, opcionesT...)
+
+	c.JSON(http.StatusOK, gin.H{
+		"reservas": result})
 }

@@ -602,8 +602,8 @@ INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = txc_destino.ID_Ciuda
 
 INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = i.ID 
 INNER JOIN ViajaPlus.dbo.Servicio ON Servicio.ID = sxi.ID_Servicio 
-INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio = Servicio.ID
-INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = sxt.ID_Transporte 
+--INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio = Servicio.ID
+INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = Servicio.ID_Transporte 
 WHERE (t_origen.ID = 1 and txc_origen.Es_Origen = 1) AND (t_destino.ID = 4 and txc_destino.Es_Origen = 0)
 
 AND Servicio.Disponibilidad = 1 
@@ -659,8 +659,8 @@ INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = txc_destino.ID_Ciuda
 
 INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = i.ID 
 INNER JOIN ViajaPlus.dbo.Servicio ON Servicio.ID = sxi.ID_Servicio 
-INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio = Servicio.ID
-INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = sxt.ID_Transporte 
+--INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio = Servicio.ID
+INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = Servicio.ID_Transporte 
 WHERE (t_origen.ID = 1 and txc_origen.Es_Origen = 1) AND (t_destino.ID = 4 and txc_destino.Es_Origen = 0)
 
 AND Servicio.Disponibilidad = 1 
@@ -676,8 +676,8 @@ AND CONVERT(date, t_origen.Fecha_Partida) = '2024-01-01'
 
 SELECT a.ID as IDAsiento, a.Disponibilidad,t.Nro_Unidad,t.Pisos,t.Situacion,t.Costo_Transporte,t.Categoria,t.Tipo_Atencion
 from ViajaPlus.dbo.Servicio s 
-inner join ViajaPlus.dbo.Servicio_x_Transporte sxt on sxt.ID_Servicio = s.ID 
-INNER join ViajaPlus.dbo.Transporte t on t.ID = sxt.ID_Transporte 
+--inner join ViajaPlus.dbo.Servicio_x_Transporte sxt on sxt.ID_Servicio = s.ID 
+INNER join ViajaPlus.dbo.Transporte t on t.ID = s.ID_Transporte 
 inner join ViajaPlus.dbo.Asiento a on a.ID_Transporte = t.ID 
 WHERE s.ID = 1
 
@@ -767,6 +767,28 @@ OUTPUT INSERTED."id" VALUES ('Juan','Perez',12345678);
 --	(ID_Tramo, ID_Reserva, Es_Origen)
 --	VALUES(0, 0, 0);
 
+------------se deben actualizar el estdo de los aseitnos y de transporte
+UPDATE ViajaPlus.dbo.Asiento
+SET Disponibilidad=0
+WHERE ID=1 AND ID_Transporte=1;
+
+--//si este count viene vacio 
+SELECT COUNT(*) FROM ViajaPlus.dbo.Asiento
+WHERE ID_Transporte=1 AND Disponibilidad=1
+
+--//se actualiza el estado del transporte a ocupado
+UPDATE ViajaPlus.dbo.Transporte 
+SET Situacion=0
+WHERE ID_Transporte=1;
+
+--//si el estado del transporte del servicio es no disponible entonces el Servicio tambien deberia serlo
+UPDATE ViajaPlus.dbo.Servicio  
+SET Disponibilidad =0
+WHERE ID_Transporte=1;
+
+
+
+
    -------------------------------------------------------------------------------
    USE ViajaPlus
 
@@ -802,18 +824,100 @@ ADD ID_Transporte INT;
 ADD CONSTRAINT FK_Reserva_Asiento
     FOREIGN KEY (ID_Asiento, ID_Transporte)
     REFERENCES ViajaPlus.dbo.Asiento(ID, ID_Transporte);
+   
+  ALTER TABLE ViajaPlus.dbo.Servicio ADD Calidad_Servicio varchar(40) NULL;
+ALTER TABLE ViajaPlus.dbo.Transporte ADD Capacidad int NULL;
 
 --ALTER TABLE ViajaPlus.dbo.Servicio ADD Calidad_Servicio varchar(40) NULL;
 --ALTER TABLE ViajaPlus.dbo.Transporte ADD Capacidad int NULL;
    
 
 --2. Venta de Pasajes: Facilita la compra de pasajes para itinerarios o tramos en función de la disponibilidad.
+
+--//solo se peuden comprar viajes previamente reservados
+--para comprar primero se tienen que listar las reservas, como no tenemos usuarios, se listan todas las reservas
+--
+
+--query para obtener las reservas
+SELECT 
+    r.ID, r.Nombre, r.Apellido, r.DNI, r.Estado, r.Costo, r.ID_Asiento, r.ID_Transporte,
+    origen.Nombre AS Ciudad_Origen,
+    destino.Nombre AS Ciudad_Destino,
+    origen.ID_Ciudad AS IDCiudad_Origen,
+    destino.ID_Ciudad AS IDCiudad_Destino
+FROM 
+    ViajaPlus.dbo.Reserva r 
+INNER JOIN 
+    (
+    	SELECT rxc.ID_Reserva, rxc.ID_Ciudad, c.Nombre
+    	FROM ViajaPlus.dbo.Reserva_x_Ciudad rxc
+    	INNER JOIN ViajaPlus.dbo.Ciudad c ON c.ID = rxc.ID_Ciudad
+    	WHERE rxc.Es_Origen = 1
+	) origen 
+ON 
+    origen.ID_Reserva = r.ID
+INNER JOIN 
+    (
+    	SELECT rxc.ID_Reserva, rxc.ID_Ciudad, c.Nombre
+    	FROM ViajaPlus.dbo.Reserva_x_Ciudad rxc
+    	INNER JOIN ViajaPlus.dbo.Ciudad c ON c.ID = rxc.ID_Ciudad
+    	WHERE rxc.Es_Origen = 0
+	) destino 
+ON 
+    destino.ID_Reserva = r.ID
+
+
+
 --3. Cancelación de Reservas a Pedido: Los clientes pueden cancelar sus reservas antes de la fecha de partida 
 --programada.
 --4. Cancelación Automática de Reservas por Expiración: Las reservas se cancelan automáticamente si no se 
 --efectúa la venta dentro de los treinta minutos previos al horario de partida.
+
+--no funciona en migracion
+
+CREATE PROCEDURE VerificarReservasPorExpiracion
+    AS
+    BEGIN
+        UPDATE R
+        SET Estado = 'Cancelada'
+            FROM Reserva R
+            INNER JOIN Reserva_x_Ciudad RC ON RC.ID_Reserva = R.ID
+            INNER JOIN Ciudad C ON C.ID = RC.ID_Ciudad
+            INNER JOIN Itinerario_x_Ciudad IC ON IC.ID_Ciudad = C.ID
+            INNER JOIN Itinerario I ON I.ID = IC.ID_Itinerario
+            INNER JOIN Servicio_x_Itinerario SI ON SI.ID_Itinerario = I.ID
+            INNER JOIN Servicio S ON S.ID = SI.ID_Servicio
+            WHERE R.Estado LIKE 'Pendiente' AND GETDATE() < DATEADD(MINUTE, -30, s.Fecha_Llegada)
+    END
+
+EXEC msdb.dbo.sp_add_job
+    @job_name = N'ActualizarReservasJob',
+    @enabled = 1,
+    @start_step_id = 1,
+    @owner_login_name = N'tu_usuario';
+
+EXEC msdb.dbo.sp_add_jobstep
+    @job_name = N'ActualizarReservasJob',
+    @step_id = 1,
+    @subsystem = N'TSQL',
+    @command = N'EXEC ActualizarEstadoReservas',
+    @database_name = N'ViajaPlus';
+
+EXEC msdb.dbo.sp_add_schedule
+    @job_name = N'ActualizarReservasJob',
+    @name = N'UnaVezCadaMinuto',
+    @freq_type = 4,
+    @freq_interval = 1;
+
+EXEC msdb.dbo.sp_add_jobserver
+    @job_name = N'ActualizarReservasJob',
+    @server_name = N'(tu_servidor)';
+
 --5. Mantenimiento de Itinerarios: Permite a "ViajaPlus" administrar y actualizar los itinerarios, incluyendo 
 --horarios, ciudades y puntos intermedios.
+   
+   --en front administration/buses
+  
 --6. Gestión de Unidades: Facilita el mantenimiento y la gestión de las unidades de transporte, incluyendo su 
 --categoría y disponibilidad.
 --7. Gestión de Servicios: Permite al programador de servicios asignar itinerarios, fechas, unidades y calidad de 
