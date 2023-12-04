@@ -9,20 +9,7 @@ DNI INT NOT NULL,
 Email VARCHAR(50) NOT NULL,
 Contrasena VARCHAR(50) NOT NULL
 );
--------------------------------------------------------------------------------------------------------
-USE ViajaPlus
 
-DROP TABLE IF EXISTS Servicio
-
-CREATE TABLE Servicio
-(
-ID INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
-Disponibilidad BIT NOT NULL,
-Fecha_Partida DATETIME2 NOT NULL,
-Fecha_Llegada DATETIME2 NOT NULL,
-Costo_Servicio MONEY NOT NULL
-);
------------------------------------------
 --USE ViajaPlus
 --
 --DROP TABLE IF EXISTS Calidad_Servicio
@@ -52,6 +39,25 @@ CREATE TABLE ViajaPlus.dbo.Transporte (
 	Tipo_Atencion varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	CONSTRAINT PK__Transpor__3214EC27D05AFFB0 PRIMARY KEY (ID)
 );
+
+-------------------------------------------------------------------------------------------------------
+USE ViajaPlus
+
+DROP TABLE IF EXISTS Servicio
+
+CREATE TABLE Servicio
+(
+ID INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+Disponibilidad BIT NOT NULL,
+Fecha_Partida DATETIME2 NOT NULL,
+Fecha_Llegada DATETIME2 NOT NULL,
+Costo_Servicio MONEY NOT NULL,
+ID_Transporte INT NOT NULL,
+
+FOREIGN KEY (ID_Transporte) REFERENCES dbo.Transporte(ID)
+);
+
+-----------------------------------------
 
 USE ViajaPlus
 
@@ -225,19 +231,19 @@ FOREIGN KEY (ID_Tramo) REFERENCES dbo.Tramo(ID),
 FOREIGN KEY (ID_Itinerario) REFERENCES dbo.Itinerario(ID)
 );
 
-USE ViajaPlus
+-- USE ViajaPlus
 
-DROP TABLE IF EXISTS Servicio_x_Transporte
+-- DROP TABLE IF EXISTS Servicio_x_Transporte
 
-CREATE TABLE Servicio_x_Transporte
-(
-ID_Servicio INT NOT NULL,
-ID_Transporte INT NOT NULL,
-PRIMARY KEY(ID_Servicio, ID_Transporte),
+-- CREATE TABLE Servicio_x_Transporte
+-- (
+-- ID_Servicio INT NOT NULL,
+-- ID_Transporte INT NOT NULL,
+-- PRIMARY KEY(ID_Servicio, ID_Transporte),
 
-FOREIGN KEY (ID_Servicio) REFERENCES dbo.Servicio(ID),
-FOREIGN KEY (ID_Transporte) REFERENCES dbo.Transporte(ID)
-);
+-- FOREIGN KEY (ID_Servicio) REFERENCES dbo.Servicio(ID),
+-- FOREIGN KEY (ID_Transporte) REFERENCES dbo.Transporte(ID)
+-- );
 
 USE ViajaPlus
 
@@ -369,45 +375,43 @@ ALTER TABLE ViajaPlus.dbo.Servicio ADD Calidad_Servicio varchar(40);
 ALTER TABLE ViajaPlus.dbo.Servicio ADD  DEFAULT 'Comun' FOR Calidad_Servicio;
 ALTER TABLE ViajaPlus.dbo.Transporte ADD Capacidad int;
 
--- -- CREATE PROCEDURE VerificarReservasPorExpiracion
--- --     AS
--- --     BEGIN
--- --         UPDATE R
--- --         SET Estado = 'Cancelada'
--- --             FROM Reserva R
--- --             INNER JOIN Reserva_x_Ciudad RC ON RC.ID_Reserva = R.ID
--- --             INNER JOIN Ciudad C ON C.ID = RC.ID_Ciudad
--- --             INNER JOIN Itinerario_x_Ciudad IC ON IC.ID_Ciudad = C.ID
--- --             INNER JOIN Itinerario I ON I.ID = IC.ID_Itinerario
--- --             INNER JOIN Servicio_x_Itinerario SI ON SI.ID_Itinerario = I.ID
--- --             INNER JOIN Servicio S ON S.ID = SI.ID_Servicio
--- --             WHERE R.Estado LIKE 'Pendiente' AND GETDATE() < DATEADD(MINUTE, -30, s.Fecha_Llegada)
--- --     END
+-- CREATE PROCEDURE VerificarReservasPorExpiracion
+--     AS
+--     BEGIN
+--         UPDATE R
+--         SET Estado = 'Cancelada'
+--             FROM Reserva R
+--             INNER JOIN Reserva_x_Ciudad RC ON RC.ID_Reserva = R.ID
+--             INNER JOIN Ciudad C ON C.ID = RC.ID_Ciudad
+--             INNER JOIN Itinerario_x_Ciudad IC ON IC.ID_Ciudad = C.ID
+--             INNER JOIN Itinerario I ON I.ID = IC.ID_Itinerario
+--             INNER JOIN Servicio_x_Itinerario SI ON SI.ID_Itinerario = I.ID
+--             INNER JOIN Servicio S ON S.ID = SI.ID_Servicio
+--             WHERE R.Estado LIKE 'Pendiente' AND GETDATE() < DATEADD(MINUTE, -30, s.Fecha_Llegada)
+--     END
 
--- -- USE ViajaPlus
+-- EXEC msdb.dbo.sp_add_job
+--     @job_name = N'ActualizarReservasJob',
+--     @enabled = 1,
+--     @start_step_id = 1,
+--     @owner_login_name = N'tu_usuario';
 
--- -- EXEC msdb.dbo.sp_add_job
--- --     @job_name = N'ActualizarReservasJob',
--- --     @enabled = 1,
--- --     @start_step_id = 1,
--- --     @owner_login_name = N'tu_usuario';
+-- EXEC msdb.dbo.sp_add_jobstep
+--     @job_name = N'ActualizarReservasJob',
+--     @step_id = 1,
+--     @subsystem = N'TSQL',
+--     @command = N'EXEC ActualizarEstadoReservas',
+--     @database_name = N'ViajaPlus';
 
--- -- EXEC msdb.dbo.sp_add_jobstep
--- --     @job_name = N'ActualizarReservasJob',
--- --     @step_id = 1,
--- --     @subsystem = N'TSQL',
--- --     @command = N'EXEC ActualizarEstadoReservas',
--- --     @database_name = N'ViajaPlus';
+-- EXEC msdb.dbo.sp_add_schedule
+--     @job_name = N'ActualizarReservasJob',
+--     @name = N'UnaVezCadaMinuto',
+--     @freq_type = 4,
+--     @freq_interval = 1;
 
--- -- EXEC msdb.dbo.sp_add_schedule
--- --     @job_name = N'ActualizarReservasJob',
--- --     @name = N'UnaVezCadaMinuto',
--- --     @freq_type = 4,
--- --     @freq_interval = 1;
-
--- -- EXEC msdb.dbo.sp_add_jobserver
--- --     @job_name = N'ActualizarReservasJob',
--- --     @server_name = N'(tu_servidor)';
+-- EXEC msdb.dbo.sp_add_jobserver
+--     @job_name = N'ActualizarReservasJob',
+--     @server_name = N'(tu_servidor)';
 
 
 ALTER TABLE Servicio

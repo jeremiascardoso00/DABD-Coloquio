@@ -244,8 +244,8 @@ func (vc *ViajeController) GetItinerariosYTramos(c *gin.Context) {
 		Joins("INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = txc_destino.ID_Ciudad").
 		Joins("INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = i.ID").
 		Joins("INNER JOIN ViajaPlus.dbo.Servicio ON Servicio.ID = sxi.ID_Servicio").
-		Joins("INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio = Servicio.ID").
-		Joins("INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = sxt.ID_Transporte").
+		// Joins("INNER JOIN ViajaPlus.dbo.Servicio_x_Transporte sxt ON sxt.ID_Servicio = Servicio.ID").
+		Joins("INNER JOIN ViajaPlus.dbo.Transporte t ON t.ID = Servicio.ID_Transporte").
 		Where("(t_origen.ID = ? and txc_origen.Es_Origen = 1)", resultStep1[0].ID_Tramo).
 		Where("(t_destino.ID = ? and txc_destino.Es_Origen = 0)", resultStep1[1].ID_Tramo).
 		Where("Servicio.Disponibilidad = 1").
@@ -285,8 +285,7 @@ func (vc *ViajeController) GetAsientosSegunServicio(c *gin.Context) {
 	query := vc.Txn.Raw(`
 	SELECT a.ID as IDAsiento, a.Disponibilidad,t.Nro_Unidad,t.Pisos,t.Situacion,t.Costo_Transporte,t.Categoria,t.Tipo_Atencion
 	from ViajaPlus.dbo.Servicio s 
-	inner join ViajaPlus.dbo.Servicio_x_Transporte sxt on sxt.ID_Servicio = s.ID 
-	INNER join ViajaPlus.dbo.Transporte t on t.ID = sxt.ID_Transporte 
+	INNER join ViajaPlus.dbo.Transporte t on t.ID = s.ID_Transporte 
 	inner join ViajaPlus.dbo.Asiento a on a.ID_Transporte = t.ID 
 	WHERE s.ID = ?`, serviceID).
 		Scan(&result)
@@ -368,7 +367,7 @@ func (vc *ViajeController) CreateReserva(c *gin.Context) {
 	err = vc.Txn.Raw(queryStr, requestBody.Nombre,
 		requestBody.Apellido,
 		requestBody.DNI,
-		"Reservado",
+		"Pendiente",
 		requestBody.Costo,
 		requestBody.IDAsiento,
 		requestBody.IDTransporte).
@@ -412,6 +411,42 @@ func (vc *ViajeController) CreateReserva(c *gin.Context) {
 	//el paso que sigue despues de hacer la reserva es cambiar a le estado de las cosas que reservas a no disponible,
 	//algunas de las cosas pueden ser asientos, y en base a eso revisar si todos los asientos de un transporte de un viaje estan ocupados
 	//con la nueva reserva/
+
+	// cambiar la disponibilidad del asiento
+	queryStr = "UPDATE ViajaPlus.dbo.Asiento SET Disponibilidad=0 WHERE ID=? AND ID_Transporte=?"
+	err = vc.Txn.Exec(queryStr, requestBody.IDAsiento, requestBody.IDTransporte).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var countResult int64
+
+	query := vc.Txn.Table("ViajaPlus.dbo.Asiento").
+		Where("ID_Transporte=? AND Disponibilidad=1", requestBody.IDTransporte).
+		Count(&countResult)
+	if query.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if countResult == 0 {
+		// cambiar la disponibilidad del transporte
+		queryStr = "UPDATE ViajaPlus.dbo.Transporte SET Situacion=0 WHERE ID_Transporte=?"
+		err = vc.Txn.Exec(queryStr, requestBody.IDTransporte).Error
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// cambiar la disponibilidad del servicio
+		queryStr = "UPDATE ViajaPlus.dbo.Servicio SET Disponibilidad=0 WHERE ID_Transporte=?"
+		err = vc.Txn.Exec(queryStr, requestBody.IDTransporte).Error
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"reserva": result.ID})

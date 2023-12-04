@@ -97,13 +97,6 @@ VALUES (1, 1),
 		(1, 5)
 
 --Disponibilidad bit = 1 Est� disponible, bit = 0 no est� disponible
-INSERT INTO Servicio(Disponibilidad, Fecha_Partida, Fecha_Llegada, Costo_Servicio)
-VALUES (1, '20240101 12:00:00.0000000', '20240102 02:15:00.0000000', '$17500')
-
-INSERT INTO Servicio_x_Itinerario(ID_Servicio, ID_Itinerario)
-VALUES (1, 1)
-
---Disponibilidad bit = 1 Est� disponible, bit = 0 no est� disponible
 INSERT INTO Transporte(Nro_Unidad, Pisos, Situacion, Costo_Transporte, Categoria, Tipo_Atencion)
 VALUES (1001, 1, 1, '$1000', 'Comun', 'Comun'),
 		(1002, 1, 1, '$1000', 'Comun', 'Comun'),
@@ -113,10 +106,13 @@ VALUES (1001, 1, 1, '$1000', 'Comun', 'Comun'),
 		(1006, 2, 1, '$1500', 'Semi cama', 'Comun'),
 		(1007, 2, 1, '$2000', 'Coche cama', 'Ejecutivo'),
 		(1008, 2, 1, '$2000', 'Coche cama', 'Ejecutivo')
-
 		
-SELECT *
-FROM Transporte
+--Disponibilidad bit = 1 Est� disponible, bit = 0 no est� disponible
+INSERT INTO Servicio(Disponibilidad, Fecha_Partida, Fecha_Llegada, Costo_Servicio, ID_Transporte)
+VALUES (1, '20240101 12:00:00.0000000', '20240102 02:15:00.0000000', '$17500',1)
+
+INSERT INTO Servicio_x_Itinerario(ID_Servicio, ID_Itinerario)
+VALUES (1, 1)
 
 --Disponibilidad bit = 1 Est� disponible, bit = 0 no est� disponible
 INSERT INTO Asiento(ID_Transporte, Disponibilidad)
@@ -140,8 +136,8 @@ VALUES (1,8),
 		(2,7),
 		(2,8)
 
-INSERT INTO Servicio_x_Transporte(ID_Servicio, ID_Transporte)
-VALUES (1, 1)
+-- INSERT INTO Servicio_x_Transporte(ID_Servicio, ID_Transporte)
+-- VALUES (1, 1)
 
 
 --agrego los campos de gorm para el soft, delete, nada importante
@@ -177,8 +173,8 @@ ALTER TABLE Servicio
 ADD deleted_at DATETIME2;
 ALTER TABLE Servicio_x_Itinerario
 ADD deleted_at DATETIME2;
-ALTER TABLE Servicio_x_Transporte
-ADD deleted_at DATETIME2;
+-- ALTER TABLE Servicio_x_Transporte
+-- ADD deleted_at DATETIME2;
 ALTER TABLE Tramo
 ADD deleted_at DATETIME2;
 ALTER TABLE Tramo_x_Ciudad
