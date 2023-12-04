@@ -413,6 +413,9 @@ func (vc *ViajeController) DeleteReserva(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"reserva": reservaID})
+
+	//todo: contemplar que los asientos y en todo caso los transportes y servicios vuel
+	//van a estar disponibles si se cancela una reserva
 }
 
 func (vc *ViajeController) ComprarReserva(c *gin.Context) {

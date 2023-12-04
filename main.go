@@ -75,6 +75,7 @@ func main() {
 	r.POST("/viaje/reserva", vc.CreateReserva)
 	r.GET("/viaje/reservas", vc.GetReservas)
 	r.DELETE("/viaje/reserva/:rid", vc.DeleteReserva)
+	r.POST("/viaje/reserva/:rid", vc.ComprarReserva)
 
 	r.Run(":3000")
 
