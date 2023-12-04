@@ -414,3 +414,50 @@ func (vc *ViajeController) DeleteReserva(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"reserva": reservaID})
 }
+
+func (vc *ViajeController) ComprarReserva(c *gin.Context) {
+
+	reservaID := c.Param("rid")
+	if reservaID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid reserva 'ID' parameter"})
+		return
+	}
+
+	type Result struct {
+		ID    uint    `gorm:"column:IDServicio"`
+		Costo float64 `gorm:"column:Costo"`
+	}
+
+	var result Result
+
+	queryStr := `SELECT  s.ID as IDServicio, r.Costo  FROM ViajaPlus.dbo.Reserva r
+	INNER JOIN ViajaPlus.dbo.Servicio s ON s.ID_Transporte  = r.ID_Transporte 
+	WHERE r.ID=?`
+	err := vc.Txn.Raw(queryStr, reservaID).
+		Scan(&result).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	queryStr = `UPDATE ViajaPlus.dbo.Reserva
+		SET Estado='Vendida'
+		WHERE ID=?`
+	err = vc.Txn.Exec(queryStr, reservaID).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	queryStr = `INSERT INTO ViajaPlus.dbo.Pasaje
+				(ID_Servicio, Costo)
+				VALUES(?, ?);`
+	err = vc.Txn.Exec(queryStr, result.ID, result.Costo).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"reserva": result.ID})
+}
