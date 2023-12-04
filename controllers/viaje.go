@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jeremiascardoso00/DABD-COLOQUIO/models"
 	"gorm.io/gorm"
 )
 
@@ -328,10 +329,10 @@ type Reserva struct {
 	Costo           float64
 	ID_Asiento      int
 	ID_Transporte   int
-	CiudadOrigen    string
-	CiudadDestino   string
-	IDCiudadOrigen  uint
-	IDCiudadDestino uint
+	CiudadOrigen    string `gorm:"column:Ciudad_Origen"`
+	CiudadDestino   string `gorm:"column:Ciudad_Destino"`
+	IDCiudadOrigen  uint   `gorm:"column:IDCiudad_Origen"`
+	IDCiudadDestino uint   `gorm:"column:IDCiudad_Destino"`
 }
 
 func (vc *ViajeController) GetReservas(c *gin.Context) {
@@ -364,7 +365,8 @@ func (vc *ViajeController) GetReservas(c *gin.Context) {
 			WHERE rxc.Es_Origen = 0
 		) destino 
 	ON 
-		destino.ID_Reserva = r.ID`).
+		destino.ID_Reserva = r.ID
+	WHERE r.deleted_at is null`).
 		Scan(&result)
 	if query.Error != nil && !errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
@@ -375,4 +377,40 @@ func (vc *ViajeController) GetReservas(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"reservas": result})
+}
+
+func (vc *ViajeController) DeleteReserva(c *gin.Context) {
+
+	reservaID := c.Param("rid")
+	if reservaID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid reserva 'ID' parameter"})
+		return
+	}
+
+	query := vc.Txn.
+		Where("ID_Reserva = ?", reservaID).
+		Delete(&models.Reserva_x_Ciudad{})
+	if query.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
+		return
+	}
+
+	query = vc.Txn.
+		Where("ID_Reserva = ?", reservaID).
+		Delete(&models.Tramo_x_Reserva{})
+	if query.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
+		return
+	}
+
+	query = vc.Txn.
+		Where("ID = ?", reservaID).
+		Delete(&models.Reserva{})
+	if query.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": query.Error.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"reserva": reservaID})
 }

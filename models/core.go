@@ -102,9 +102,38 @@ type Pasaje struct {
 
 type Reserva struct {
 	gorm.Model
-	Nombre   string
-	Apellido string
-	DNI      int
+	Nombre        string  `gorm:"column:Nombre"`
+	Apellido      string  `gorm:"column:Apellido"`
+	DNI           int     `gorm:"column:DNI"`
+	Estado        string  `gorm:"column:Estado"`
+	Costo         float64 `gorm:"column:Costo"`
+	ID_Asiento    int     `gorm:"column:ID_Asiento"`
+	ID_Transporte int     `gorm:"column:ID_Transporte"`
+}
+
+func (Reserva) TableName() string {
+	return "ViajaPlus.dbo.Reserva"
+}
+
+type Reserva_x_Ciudad struct {
+	ID_Reserva uint           `gorm:"primaryKey"`
+	ID_Ciudad  uint           `gorm:"primaryKey"`
+	Es_Origen  bool           `gorm:"column:es_origen"`
+	DeletedAt  gorm.DeletedAt `gorm:"index"`
+}
+
+func (Reserva_x_Ciudad) TableName() string {
+	return "ViajaPlus.dbo.Reserva_x_Ciudad"
+}
+
+type Tramo_x_Reserva struct {
+	ID_Tramo   uint `gorm:"primaryKey"`
+	ID_Reserva uint `gorm:"primaryKey"`
+	Es_Origen  bool `gorm:"column:es_origen"`
+}
+
+func (Tramo_x_Reserva) TableName() string {
+	return "ViajaPlus.dbo.Tramo_x_Reserva"
 }
 
 type EstadoReserva struct {
