@@ -1002,7 +1002,29 @@ INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = ixc_destino.ID_Ciuda
 --6. Gestión de Unidades: Facilita el mantenimiento y la gestión de las unidades de transporte, incluyendo su 
 --categoría y disponibilidad.
    
-   
+
+--obtener todos los transportes
+SELECT * FROM ViajaPlus.dbo.Transporte 
+
+--obtener un transporte especifico
+SELECT * 
+FROM ViajaPlus.dbo.Transporte 
+WHERE ViajaPlus.dbo.Transporte.ID = '1' 
+ORDER BY ViajaPlus.dbo.Transporte.ID
+OFFSET 0 ROW FETCH NEXT 1 ROWS ONLY
+
+--update de transporte especifico
+UPDATE ViajaPlus.dbo.Transporte 
+SET deleted_at=CURRENT_TIMESTAMP ,
+Nro_Unidad=1001,
+Pisos=1,
+Situacion=1,
+Costo_Transporte=1000,
+Categoria='Común',
+Tipo_Atencion='Común' 
+WHERE ID = 1
+
+
 --7. Gestión de Servicios: Permite al programador de servicios asignar itinerarios, fechas, unidades y calidad de 
 --servicio para programar los viajes
 --8. Estadísticas de Pasajes Vendidos: Proporciona informes y estadísticas sobre la cantidad de pasajes vendidos en 
