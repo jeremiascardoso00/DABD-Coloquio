@@ -53,8 +53,8 @@ func main() {
 	r.GET("/administradores", ac.GetAdministradores)
 
 	//CRUD itinerario
-	r.GET("/itinerario", ic.GetItinerarios)
-	r.GET("/itinerarios/:id", ic.GetItinerarioByID)
+	r.GET("/itinerarios", ic.GetItinerarios)
+	r.GET("/itinerario/:id", ic.GetItinerarioByID)
 	r.DELETE("/delete-itinerarios/:id", ic.DeleteItinerarioByID)
 	r.PATCH("/update-itinerario/:id", ic.UpdateItinerarioByID)
 

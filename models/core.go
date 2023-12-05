@@ -34,11 +34,14 @@ type CalidadServicio struct {
 }
 
 type Transporte struct {
-	gorm.Model
-	NroUnidad       int
+	ID              uint      `gorm:"primarykey"`
+	DeletedAt       time.Time `gorm:"index"`
+	NroUnidad       int       `gorm:"column:Nro_Unidad"`
 	Pisos           int
 	Situacion       bool
-	CostoTransporte float64
+	CostoTransporte float64 `gorm:"column:Costo_Transporte"`
+	Categoria       string  `gorm:"column:Categoria"`
+	TipoAtencion    string  `gorm:"column:Tipo_Atencion"`
 }
 
 // TableName overrides the table name used by User to `profiles`
@@ -81,7 +84,11 @@ func (Tramo) TableName() string {
 
 type Itinerario struct {
 	gorm.Model
-	Distancia int `gorm:"column:Distancia; not null"`
+	Distancia int `gorm:"column:Distancia"`
+}
+
+func (Itinerario) TableName() string {
+	return "ViajaPlus.dbo.Itinerario"
 }
 
 type Ciudad struct {

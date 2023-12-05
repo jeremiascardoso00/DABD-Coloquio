@@ -865,9 +865,26 @@ INNER JOIN
 	) destino 
 ON 
     destino.ID_Reserva = r.ID
+where r.deleted_at is null
 
 
+--una vez que se tiene la lista de reservas se puede o borrar la reserva o confirmar la compra 
 
+SELECT  s.ID as IDServicio, r.Costo  FROM ViajaPlus.dbo.Reserva r
+INNER JOIN ViajaPlus.dbo.Servicio s ON s.ID_Transporte  = r.ID_Transporte 
+WHERE r.ID=1
+--retorna esto 1	100.5000
+
+UPDATE ViajaPlus.dbo.Reserva
+SET Estado='Vendida'
+WHERE ID=1;
+
+INSERT INTO ViajaPlus.dbo.Pasaje
+(ID_Servicio, Costo)
+VALUES(1, 100.5000);
+--------------------------------------------------------
+    
+  
 --3. Cancelación de Reservas a Pedido: Los clientes pueden cancelar sus reservas antes de la fecha de partida 
 --programada.
 --4. Cancelación Automática de Reservas por Expiración: Las reservas se cancelan automáticamente si no se 
@@ -916,10 +933,76 @@ EXEC msdb.dbo.sp_add_jobserver
 --5. Mantenimiento de Itinerarios: Permite a "ViajaPlus" administrar y actualizar los itinerarios, incluyendo 
 --horarios, ciudades y puntos intermedios.
    
-   --en front administration/buses
+SELECT 
+		i.ID AS ID_Itinerario,
+		ixt_origen.ID_Tramo AS ID_Tramo_Origen,
+		ixt_destino.ID_Tramo AS ID_Tramo_Destino,
+		c_origen.Nombre as NombreCiudadOrigen,
+		c_destino.Nombre as NombreCiudadDestino
+FROM ViajaPlus.dbo.Itinerario i
+
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Ciudad ixc_origen 
+ON ixc_origen.ID_Itinerario = i.ID AND ixc_origen.Es_Origen = 1
+INNER JOIN ViajaPlus.dbo.Ciudad c_origen ON c_origen.ID = ixc_origen.ID_Ciudad 
+
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt_origen 
+ON ixt_origen.ID_Itinerario = i.ID
+INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_origen 
+ON txc_origen.ID_Tramo = ixt_origen.ID_Tramo AND txc_origen.Es_Origen = 1 
+
+
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Ciudad ixc_destino 
+ON ixc_destino.ID_Itinerario = i.ID AND ixc_destino.Es_Origen = 0
+INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = ixc_destino.ID_Ciudad 
+
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt_destino 
+ON ixt_destino.ID_Itinerario = i.ID
+INNER JOIN ViajaPlus.dbo.Tramo_x_Ciudad txc_destino 
+ON txc_destino.ID_Tramo = ixt_destino.ID_Tramo AND txc_destino.Es_Origen = 0
+			
+WHERE txc_origen.ID_Ciudad = c_origen.ID 
+AND txc_destino.ID_Ciudad = c_destino.ID
+			
+			
+--------------------------------------------------_____
+   
+SELECT
+		i.ID as IDItinerario,
+		i.Distancia,      
+		s.ID as IDServicio,             
+		s.Disponibilidad, 
+		s.Fecha_Partida, 
+		s.Fecha_Llegada,  
+		ixt_origen.ID_Tramo as IDTramoOrigen,
+		ixt_destino.ID_Tramo as IDTramoDestino,
+		c_origen.Nombre as NombreCiudadOrigen,
+		c_destino.Nombre as NombreCiudadDestino,
+		s.Costo_Servicio,
+		s.ID_Transporte, 
+		s.Calidad_Servicio  
+FROM ViajaPlus.dbo.Itinerario i
+INNER JOIN ViajaPlus.dbo.Servicio_x_Itinerario sxi ON sxi.ID_Itinerario = i.ID 
+INNER JOIN ViajaPlus.dbo.Servicio s  ON s.ID  = sxi.ID_Servicio
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt_origen 
+ON ixt_origen.ID_Itinerario = i.ID and ixt_origen.ID_Tramo = 1
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Ciudad ixc_origen 
+ON ixc_origen.ID_Itinerario = i.ID AND ixc_origen.Es_Origen = 1
+INNER JOIN ViajaPlus.dbo.Ciudad c_origen ON c_origen.ID = ixc_origen.ID_Ciudad 
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Tramo ixt_destino 
+ON ixt_destino.ID_Itinerario = i.ID and ixt_destino.ID_Tramo = 5
+INNER JOIN ViajaPlus.dbo.Itinerario_x_Ciudad ixc_destino 
+ON ixc_destino.ID_Itinerario = i.ID AND ixc_destino.Es_Origen = 0
+INNER JOIN ViajaPlus.dbo.Ciudad c_destino ON c_destino.ID = ixc_destino.ID_Ciudad 
+
+
+
+----------------
+
   
 --6. Gestión de Unidades: Facilita el mantenimiento y la gestión de las unidades de transporte, incluyendo su 
 --categoría y disponibilidad.
+   
+   
 --7. Gestión de Servicios: Permite al programador de servicios asignar itinerarios, fechas, unidades y calidad de 
 --servicio para programar los viajes
 --8. Estadísticas de Pasajes Vendidos: Proporciona informes y estadísticas sobre la cantidad de pasajes vendidos en 

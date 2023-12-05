@@ -13,7 +13,7 @@ type TransporteController struct {
 }
 
 func (tc *TransporteController) GetTransportes(c *gin.Context) {
-	var transporte models.Transporte
+	var transporte []models.Transporte
 
 	query := tc.Txn.Find(&transporte)
 	if query.Error != nil {
@@ -50,7 +50,7 @@ func (tc *TransporteController) DeleteTransporteByID(c *gin.Context) {
 	// Eliminar el Transporte
 	tc.Txn.Delete(&transporte)
 
-	c.JSON(http.StatusOK, gin.H{"message": "Transporte deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": transporte.ID})
 }
 
 func (tc *TransporteController) UpdateTransporteByID(c *gin.Context) {
